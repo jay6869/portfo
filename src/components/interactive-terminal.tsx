@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useRef, useState } from "react";
 
 interface Line { kind: "in" | "out"; text: string }

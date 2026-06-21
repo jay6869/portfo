@@ -1,4 +1,7 @@
-import { Link, useLocation } from "@tanstack/react-router";
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -12,7 +15,7 @@ const links = [
 ] as const;
 
 export function Nav() {
-  const { pathname } = useLocation();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -34,7 +37,7 @@ export function Nav() {
       }`}
     >
       <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link to="/" className="mono group inline-flex items-center gap-2 text-sm">
+        <Link href="/" className="mono group inline-flex items-center gap-2 text-sm">
           <span className="size-1.5 rounded-full bg-[color:var(--signal)] shadow-[0_0_10px_var(--signal)]" />
           <span className="text-foreground">janith</span>
           <span className="text-muted-foreground">@</span>
@@ -48,7 +51,7 @@ export function Nav() {
             return (
               <Link
                 key={l.to}
-                to={l.to}
+                href={l.to}
                 className="mono group relative px-3 py-2 text-xs uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
               >
                 <span className="text-[color:var(--signal)]/70 mr-1">{active ? "▸" : "·"}</span>
@@ -88,7 +91,7 @@ export function Nav() {
                 return (
                   <Link
                     key={l.to}
-                    to={l.to}
+                    href={l.to}
                     className="mono flex items-center gap-2 rounded-md px-3 py-2.5 text-sm text-muted-foreground hover:bg-[color:var(--surface)] hover:text-foreground"
                   >
                     <span className="text-[color:var(--signal)]/70">{active ? "▸" : "·"}</span>

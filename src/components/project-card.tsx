@@ -1,4 +1,6 @@
-import { Link } from "@tanstack/react-router";
+"use client";
+
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import type { Project } from "@/lib/data";
@@ -19,8 +21,7 @@ export function ProjectCard({ project, index = 0 }: { project: Project; index?: 
       className="group relative"
     >
       <Link
-        to="/projects/$slug"
-        params={{ slug: project.slug }}
+        href={`/projects/${project.slug}`}
         className="hover-lift hairline block h-full rounded-lg bg-[color:var(--surface)] p-5 sm:p-6"
       >
         <div className="flex items-start justify-between gap-3">
