@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/janit/.claude\" 2>/dev/**)",
+      "Read(//c/Users/janit/.claude/plugins\" 2>/dev/**)",
+      "Bash(git --version)",
+      "Bash(gh --version)",
+      "Read(//c/Users/janit/.claude//**)",
+      "Read(//c/Users/janit/.claude/skills//**)",
+      "Read(//c/Users/janit/.claude/plugins//**)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(cd /tmp/ui-ux-pro-max-skill && echo \"===invocation patterns in SKILL.md===\"; grep -n \"search.py\\\\|python\\\\|scripts/\" .claude/skills/ui-ux-pro-max/SKILL.md | head -20)",
+      "Bash(echo \"py: $?\")",
+      "Bash(echo \"py3: $?\")",
+      "Bash(cd /tmp/ui-ux-pro-max-skill && echo \"===path refs in design_system.py===\"; grep -n \"__file__\\\\|Path\\\\|parent\\\\|templates\\\\|DATA_DIR\\\\|open\\(\\\\|/ \\\\\"\" src/ui-ux-pro-max/scripts/design_system.py | head -25)"
+    ]
+  }
+}
