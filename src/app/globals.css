@@ -68,7 +68,9 @@
   --secondary: #1a1a1a;
   --secondary-foreground: oklch(0.95 0.005 180);
   --muted: #141414;
-  --muted-foreground: oklch(0.62 0.01 180);
+  /* 0.68 lightness → ~6.8:1 on the canvas (comfortably above WCAG AA 4.5:1,
+     where 0.62 sat at a tighter 5.45:1). */
+  --muted-foreground: oklch(0.68 0.01 180);
   --accent: var(--signal);
   --accent-foreground: #000000;
   --destructive: oklch(0.62 0.22 25);
@@ -85,9 +87,23 @@
 
 .dark { color-scheme: dark; }
 
+/* Unlayered (beats layered utilities like .outline-none): a single, consistent
+   keyboard focus ring in the signal color for every interactive element. Uses
+   :focus-visible so it only shows for keyboard/AT users, not mouse clicks. */
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
 @layer base {
   * { border-color: var(--color-border); }
-  html { color-scheme: dark; }
+  html { color-scheme: dark; -webkit-tap-highlight-color: transparent; }
+  a, button, [role="button"], summary, label { touch-action: manipulation; }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);

@@ -21,9 +21,9 @@ export function SectionHeading({
           <span className="h-px w-6 bg-[color:var(--signal)]/40" />
           {eyebrow}
         </div>
-        <h2 className="text-3xl font-semibold sm:text-4xl">{title}</h2>
+        <h2 className="text-balance text-3xl font-semibold sm:text-4xl">{title}</h2>
         {description && (
-          <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+          <p className="max-w-2xl text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base">
             {description}
           </p>
         )}

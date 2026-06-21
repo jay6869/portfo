@@ -113,7 +113,9 @@ function Field({
   label, name, type = "text", textarea, error,
 }: { label: string; name: string; type?: string; textarea?: boolean; error?: string }) {
   const id = `f-${name}`;
-  const base = "mono w-full rounded-md border border-border bg-[color:var(--surface)] px-3 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-[color:var(--signal)]/60 focus:shadow-[0_0_0_3px_color-mix(in_oklab,var(--signal)_15%,transparent)]";
+  // placeholder uses full muted-foreground (was /60 → 2.62:1, a contrast fail);
+  // typed text is text-foreground so the two stay clearly distinct.
+  const base = "mono w-full rounded-md border border-border bg-[color:var(--surface)] px-3 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-[color:var(--signal)]/60 focus:shadow-[0_0_0_3px_color-mix(in_oklab,var(--signal)_15%,transparent)]";
   return (
     <label htmlFor={id} className="block">
       <div className="mono mb-1.5 flex items-center justify-between text-[10px] uppercase tracking-widest">

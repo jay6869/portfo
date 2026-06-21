@@ -4,6 +4,7 @@ import "./globals.css";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
 import { PageTransition } from "@/components/page-transition";
+import { Providers } from "@/components/providers";
 import { SITE, SITE_URL } from "@/lib/site";
 
 const inter = Inter({
@@ -70,11 +71,13 @@ export default function RootLayout({
         >
           Skip to content
         </a>
-        <Nav />
-        <main id="main" className="min-h-[calc(100vh-3.5rem)]">
-          <PageTransition>{children}</PageTransition>
-        </main>
-        <Footer />
+        <Providers>
+          <Nav />
+          <main id="main" className="min-h-[calc(100vh-3.5rem)]">
+            <PageTransition>{children}</PageTransition>
+          </main>
+          <Footer />
+        </Providers>
       </body>
     </html>
   );

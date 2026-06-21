@@ -66,7 +66,7 @@ export default function Home() {
           </Reveal>
 
           <Reveal delay={0.24}>
-            <p className="mt-6 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+            <p className="mt-6 max-w-2xl text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base">
               Cybersecurity undergraduate building offensive security tooling — breaking
               things ethically, then engineering the defenses. I care about clean exploit
               code, honest writeups, and detection logic that actually fires.
