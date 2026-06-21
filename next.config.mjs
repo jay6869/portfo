@@ -2,14 +2,21 @@
 // Next's App Router emits inline bootstrap/streaming scripts and next/font emits
 // an inline <style>; a nonce-based policy would force every page to be dynamic
 // (defeating SSG). For a static content site this is the pragmatic strong policy.
+//
+// Dev needs extra grants: `next dev` (webpack/React Refresh) evaluates modules
+// via eval() — without 'unsafe-eval' the client JS never runs, hydration fails,
+// and because every page reveals from opacity:0 the result is a blank screen.
+// HMR also uses a websocket. These relaxations apply to dev only.
+const isDev = process.env.NODE_ENV !== "production";
+
 const csp = [
   "default-src 'self'",
   "base-uri 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https:",
   "font-src 'self' data:",
-  "connect-src 'self'",
+  `connect-src 'self'${isDev ? " ws: http:" : ""}`,
   "object-src 'none'",
   "form-action 'self'",
   "frame-ancestors 'none'",
