@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { WriteupsView } from "@/components/writeups-view";
+import { getAllWriteups } from "@/lib/posts";
 
 export const metadata: Metadata = {
   title: "Writeups",
@@ -9,5 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function WriteupsPage() {
-  return <WriteupsView />;
+  return <WriteupsView writeups={getAllWriteups()} />;
 }

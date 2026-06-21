@@ -1,0 +1,25 @@
+---
+title: "Notes on Spoofing WiFi CSI from an ESP32-S3"
+date: "2025-03-02"
+readingTime: "9 min"
+excerpt: "Field notes from a small research project replaying channel-state-information frames against a commercial occupancy sensor."
+tags: ["Research", "WiFi", "Hardware"]
+---
+
+Channel State Information has quietly become the sensing fabric behind a generation of
+presence and gesture products. This post documents what happens when you treat it as
+untrusted input.
+
+## Setup
+
+One ESP32-S3 as a passive sniffer, a second as a crafted-frame transmitter, both clocked
+against the same AP beacon. A laptop captures CSI snapshots for offline comparison.
+
+The discipline that made this work was beacon timing — without a shared reference, injected
+frames land outside the window the sensor samples and the whole thing is just noise.
+
+<Callout>
+I worked with the affected vendor before publishing implementation specifics. Timelines and
+exact payload shapes are intentionally omitted. Related project:
+[WiFi-CSI Security Research](/projects/wifi-csi-security).
+</Callout>

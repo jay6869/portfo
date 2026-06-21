@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ProjectsView } from "@/components/projects-view";
+import { getAllProjects } from "@/lib/posts";
 
 export const metadata: Metadata = {
   title: "Projects",
@@ -9,5 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function ProjectsPage() {
-  return <ProjectsView />;
+  return <ProjectsView projects={getAllProjects()} />;
 }

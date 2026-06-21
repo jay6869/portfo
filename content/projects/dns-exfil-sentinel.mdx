@@ -1,0 +1,73 @@
+---
+title: "DNS Exfil Sentinel"
+type: "TOOL"
+date: "2025-05-10"
+oneLiner: "Entropy-based detector for DNS tunneling and data exfiltration."
+description: "A passive sensor that watches DNS query streams and flags subdomains whose character entropy, length distribution, and request cadence look like covert channels — not human traffic."
+tags: ["Detection", "Network", "Tooling"]
+stack: ["Python", "Scapy", "Shannon Entropy", "SQLite", "Grafana"]
+github: "https://github.com"
+featured: true
+problem: "Most DNS exfiltration toolchains (iodine, dnscat2, custom C2) defeat naive blocklists because the payload rides legitimate-looking subdomain queries. Defenders need a behavioural signal, not an IOC list."
+approach:
+  - "Capture queries with Scapy, normalise the leftmost label and compute Shannon entropy."
+  - "Score on a weighted combination of entropy, label length, NXDOMAIN ratio and per-second query cadence per source."
+  - "Stream rolling scores into SQLite with a Grafana panel for analyst triage."
+  - "Tunable allowlist for CDN and telemetry domains to keep false positives low."
+outcome:
+  - "Detected a simulated dnscat2 channel within 14 seconds of first beacon."
+  - "False positive rate under 0.4% across a week of home-lab baseline traffic."
+---
+
+DNS Exfil Sentinel started as a question I couldn't shake during a detection-engineering
+module: *if the bytes look like names, and names look like anything, how do you tell a
+covert channel from a noisy CDN?* The answer turned out to be less about any single
+indicator and more about **stacking weak signals** until the composite is decisive.
+
+## Why entropy is the right first filter
+
+Human-friendly hostnames cluster around low-to-mid Shannon entropy — they reuse common
+digrams, vowels, and dictionary fragments. Encoded payloads (base32, base64-ish) push the
+character distribution toward uniform, which shows up as a sharp entropy spike on the
+leftmost label.
+
+```python title="scoring.py" {3-4,11}
+def entropy(label: str) -> float:
+    counts = Counter(label)
+    n = len(label) or 1
+    return -sum((c / n) * math.log2(c / n) for c in counts.values())
+
+def score(query: DnsQuery) -> float:
+    e   = entropy(query.leftmost_label)
+    ln  = len(query.leftmost_label)
+    cad = query.source.qps_window(30)
+    # Normalised, weighted, clipped to [0, 1]
+    return min(1.0, 0.55 * (e / 4.5) + 0.25 * (ln / 50) + 0.20 * (cad / 40))
+```
+
+The highlighted lines are the two that matter most: the entropy computation itself, and
+the weighted composite that combines it with label length and query cadence. Entropy alone
+is noisy on short labels — combining it with length and per-source rate is what drives the
+false-positive rate down.
+
+## The pipeline
+
+The sensor is deliberately boring infrastructure, which is the point — it should run for
+weeks unattended:
+
+1. **Capture** — Scapy sniffs port 53, extracts the QNAME, and normalises the leftmost label.
+2. **Score** — each query gets a `[0, 1]` score from the function above.
+3. **Persist** — rolling per-source scores stream into SQLite.
+4. **Surface** — a Grafana panel ranks sources so an analyst triages the top of the list, not the whole firehose.
+
+## What I'd change next
+
+The cadence window is currently fixed at 30 seconds; a slow-drip exfil tool that throttles
+under that threshold would evade it. The obvious next step is an adaptive window plus a
+sequence model over per-source query history.
+
+<Callout>
+Every measurement in this writeup was taken against traffic I generated in my own lab,
+including the simulated dnscat2 channel. Do not point detectors — or generators — at
+networks you don't own.
+</Callout>

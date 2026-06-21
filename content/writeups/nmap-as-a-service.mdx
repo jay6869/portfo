@@ -1,0 +1,19 @@
+---
+title: "Designing Nmap-as-a-Service Without Footguns"
+date: "2025-01-21"
+readingTime: "6 min"
+excerpt: "Wrapping a CLI tool in an HTTP API is a magnet for shell injection and resource exhaustion. Here's the shape that worked."
+tags: ["Tooling", "Node.js", "API Design"]
+---
+
+Every team eventually wants "just an endpoint that runs nmap". The honest version of that
+endpoint has more moving parts than you'd think.
+
+## Never touch the shell
+
+Zod-validated inputs map onto an allowlist of nmap flags. The CLI is invoked via `spawn`
+with an argv array — there is no string template anywhere in the request path, which closes
+the entire class of shell-injection bugs before it opens.
+
+The full design — queueing, scoped auth, streaming progress — is written up in the
+[Nmap Scanner API](/projects/nmap-scanner-api) project.

@@ -1,13 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ShieldAlert } from "lucide-react";
-import { CodeBlock } from "@/components/code-block";
+import { MDXRemote } from "next-mdx-remote/rsc";
+import remarkGfm from "remark-gfm";
+import rehypePrettyCode from "rehype-pretty-code";
+import { ArrowLeft } from "lucide-react";
 import { Reveal } from "@/components/motion-primitives";
-import { writeups } from "@/lib/data";
+import { mdxComponents } from "@/components/mdx";
+import { getWriteup, getWriteupSlugs } from "@/lib/posts";
+import { prettyCodeOptions } from "@/lib/mdx";
+
+export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return writeups.map((w) => ({ slug: w.slug }));
+  return getWriteupSlugs().map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({
@@ -16,14 +22,15 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const writeup = writeups.find((w) => w.slug === slug);
-  if (!writeup) return {};
+  const found = getWriteup(slug);
+  if (!found) return {};
+  const { meta } = found;
   return {
-    title: { absolute: `${writeup.title} — Writeups` },
-    description: writeup.excerpt,
+    title: { absolute: `${meta.title} — Writeups` },
+    description: meta.excerpt,
     openGraph: {
-      title: writeup.title,
-      description: writeup.excerpt,
+      title: meta.title,
+      description: meta.excerpt,
       type: "article",
       url: `/writeups/${slug}`,
     },
@@ -37,8 +44,9 @@ export default async function WriteupDetail({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const writeup = writeups.find((w) => w.slug === slug);
-  if (!writeup) notFound();
+  const found = getWriteup(slug);
+  if (!found) notFound();
+  const { meta: writeup, content } = found;
 
   return (
     <article className="mx-auto max-w-2xl px-4 py-12 sm:px-6 sm:py-16">
@@ -58,47 +66,17 @@ export default async function WriteupDetail({
         </div>
       </Reveal>
 
-      <div className="mt-10 space-y-6 text-[15px] leading-[1.75] text-foreground/90">
-        {writeup.body.map((block, i) => {
-          if (block.type === "p") return <p key={i}>{block.text}</p>;
-          if (block.type === "h2")
-            return (
-              <h2 key={i} className="mt-12 text-xl font-semibold text-foreground sm:text-2xl">
-                <span className="mono mr-2 text-[color:var(--signal)]/70">§</span>
-                {block.text}
-              </h2>
-            );
-          if (block.type === "code")
-            return (
-              <CodeBlock key={i} lang={block.lang}>
-                {block.text}
-              </CodeBlock>
-            );
-          if (block.type === "list")
-            return (
-              <ul key={i} className="space-y-2 pl-1">
-                {block.items?.map((it, j) => (
-                  <li key={j} className="flex gap-3">
-                    <span className="mono shrink-0 pt-1 text-[color:var(--signal)]">▸</span>
-                    <span>{it}</span>
-                  </li>
-                ))}
-              </ul>
-            );
-          if (block.type === "callout")
-            return (
-              <aside key={i} className="hairline flex gap-3 rounded-lg border-l-2 border-l-[color:var(--warn)] bg-[color:var(--surface)] p-4 text-sm">
-                <ShieldAlert className="size-5 shrink-0 text-[color:var(--warn)]" />
-                <div>
-                  <div className="mono mb-1 text-[10px] uppercase tracking-widest text-[color:var(--warn)]">
-                    responsible disclosure
-                  </div>
-                  <p className="text-muted-foreground">{block.text}</p>
-                </div>
-              </aside>
-            );
-          return null;
-        })}
+      <div className="mdx mt-10">
+        <MDXRemote
+          source={content}
+          components={mdxComponents}
+          options={{
+            mdxOptions: {
+              remarkPlugins: [remarkGfm],
+              rehypePlugins: [[rehypePrettyCode, prettyCodeOptions]],
+            },
+          }}
+        />
       </div>
     </article>
   );

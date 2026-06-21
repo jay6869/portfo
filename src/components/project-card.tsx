@@ -3,15 +3,15 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
-import type { Project } from "@/lib/data";
+import type { ProjectMeta } from "@/lib/posts";
 
-const typeColor: Record<Project["type"], string> = {
+const typeColor: Record<ProjectMeta["type"], string> = {
   TOOL: "text-[color:var(--signal)] border-[color:var(--signal)]/40 bg-[color:var(--signal)]/5",
   RESEARCH: "text-[color:var(--info)] border-[color:var(--info)]/40 bg-[color:var(--info)]/5",
   PLATFORM: "text-[color:var(--warn)] border-[color:var(--warn)]/40 bg-[color:var(--warn)]/5",
 };
 
-export function ProjectCard({ project, index = 0 }: { project: Project; index?: number }) {
+export function ProjectCard({ project, index = 0 }: { project: ProjectMeta; index?: number }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}

@@ -12,10 +12,15 @@
   "dependencies": {
     "clsx": "^2.1.1",
     "framer-motion": "^12.40.0",
+    "gray-matter": "^4.0.3",
     "lucide-react": "^0.575.0",
     "next": "^15.5.4",
+    "next-mdx-remote": "^6.0.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "rehype-pretty-code": "^0.14.3",
+    "remark-gfm": "^4.0.1",
+    "shiki": "^4.2.0",
     "tailwind-merge": "^3.5.0",
     "zod": "^3.24.2"
   },

@@ -4,15 +4,15 @@ import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ProjectCard } from "@/components/project-card";
 import { SectionHeading } from "@/components/section-heading";
-import { projects, type ProjectTag } from "@/lib/data";
+import type { ProjectMeta, ProjectTag } from "@/lib/posts";
 
 const FILTERS: (ProjectTag | "All")[] = ["All", "Tooling", "Detection", "Network", "Research", "Web", "ICS/OT"];
 
-export function ProjectsView() {
+export function ProjectsView({ projects }: { projects: ProjectMeta[] }) {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
   const filtered = useMemo(
     () => (filter === "All" ? projects : projects.filter((p) => p.tags.includes(filter as ProjectTag))),
-    [filter],
+    [filter, projects],
   );
 
   return (

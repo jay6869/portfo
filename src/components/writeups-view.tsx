@@ -4,17 +4,17 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SectionHeading } from "@/components/section-heading";
-import { writeups } from "@/lib/data";
+import type { WriteupMeta } from "@/lib/posts";
 
-export function WriteupsView() {
+export function WriteupsView({ writeups }: { writeups: WriteupMeta[] }) {
   const allTags = useMemo(
     () => Array.from(new Set(writeups.flatMap((w) => w.tags))).sort(),
-    [],
+    [writeups],
   );
   const [tag, setTag] = useState<string | null>(null);
   const filtered = useMemo(
     () => (tag ? writeups.filter((w) => w.tags.includes(tag)) : writeups),
-    [tag],
+    [tag, writeups],
   );
 
   return (

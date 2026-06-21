@@ -1,0 +1,47 @@
+---
+title: "SOC Platform"
+type: "PLATFORM"
+date: "2025-02-15"
+oneLiner: "Lightweight blue-team workbench: Wazuh SIEM, scanner API, unified dashboard."
+description: "A self-hosted SOC starter kit that wires Wazuh, a Node.js scanning service, and a single operator dashboard into a coherent workflow for small teams and student labs."
+tags: ["Detection", "Tooling", "Network"]
+stack: ["Wazuh", "Node.js", "Fastify", "Docker", "React", "PostgreSQL"]
+github: "https://github.com"
+featured: true
+problem: "Open-source SOC stacks ship powerful primitives but expect operators to glue them together themselves. Students lose days on wiring before they learn detection engineering."
+approach:
+  - "Docker Compose stack: Wazuh manager, indexer, dashboard plus a Fastify scanner API."
+  - "Single React console aggregates alerts, scan results and asset inventory."
+  - "Webhook bridge turns scanner findings into Wazuh custom rules."
+  - "First-run wizard provisions agents and seeds detection content."
+outcome:
+  - "Bring-up time from ~4 hours of manual config to under 8 minutes."
+  - "Used as the lab spine for an intro-to-blue-team workshop (24 students)."
+---
+
+The SOC Platform exists because every time I set up a teaching lab I was redoing the same
+two days of YAML. The components are all excellent on their own — the friction is entirely
+in the seams between them.
+
+## The glue is the product
+
+The interesting engineering isn't Wazuh or the scanner; it's the **webhook bridge** that
+translates a scan finding into a Wazuh custom rule, so a discovered service immediately
+sharpens detection instead of sitting in a separate report.
+
+```yaml title="docker-compose.excerpt.yml"
+services:
+  wazuh-manager:
+    image: wazuh/wazuh-manager:4.x
+    depends_on: [indexer]
+  scanner-api:
+    build: ./scanner
+    environment:
+      WAZUH_WEBHOOK: http://wazuh-manager:55000/rules/sync
+```
+
+## What it taught me
+
+Most of the value for students was watching the feedback loop close in real time — scan a
+host, see the asset appear, watch a tuned rule fire on the next event. That loop is the
+whole pitch of purple teaming, compressed into eight minutes.

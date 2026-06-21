@@ -1,13 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { MDXRemote } from "next-mdx-remote/rsc";
+import remarkGfm from "remark-gfm";
+import rehypePrettyCode from "rehype-pretty-code";
 import { ArrowLeft, ArrowUpRight, Github, ExternalLink } from "lucide-react";
-import { CodeBlock } from "@/components/code-block";
 import { Reveal } from "@/components/motion-primitives";
-import { projects, writeups } from "@/lib/data";
+import { mdxComponents } from "@/components/mdx";
+import { getProject, getProjectSlugs, relatedWriteups } from "@/lib/posts";
+import { prettyCodeOptions } from "@/lib/mdx";
+
+export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return projects.map((p) => ({ slug: p.slug }));
+  return getProjectSlugs().map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({
@@ -16,14 +22,15 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const project = projects.find((p) => p.slug === slug);
-  if (!project) return {};
+  const found = getProject(slug);
+  if (!found) return {};
+  const { meta } = found;
   return {
-    title: project.title,
-    description: project.oneLiner,
+    title: meta.title,
+    description: meta.oneLiner,
     openGraph: {
-      title: project.title,
-      description: project.oneLiner,
+      title: meta.title,
+      description: meta.oneLiner,
       type: "article",
       url: `/projects/${slug}`,
     },
@@ -37,20 +44,10 @@ export default async function ProjectDetail({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const project = projects.find((p) => p.slug === slug);
-  if (!project) notFound();
-
-  const related = writeups
-    .filter((w) =>
-      w.tags.some((t) =>
-        project.tags.some(
-          (pt) =>
-            pt.toLowerCase().includes(t.toLowerCase()) ||
-            t.toLowerCase().includes(pt.toLowerCase()),
-        ),
-      ),
-    )
-    .slice(0, 3);
+  const found = getProject(slug);
+  if (!found) notFound();
+  const { meta: project, content } = found;
+  const related = relatedWriteups(project);
 
   return (
     <article className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
@@ -105,13 +102,7 @@ export default async function ProjectDetail({
         </div>
       </Section>
 
-      {project.code && (
-        <Section title="04 · code">
-          <CodeBlock title={project.code.title} lang={project.code.lang}>{project.code.body}</CodeBlock>
-        </Section>
-      )}
-
-      <Section title="05 · outcome">
+      <Section title="04 · outcome">
         <ul className="list-none space-y-2.5">
           {project.outcome.map((o, i) => (
             <li key={i} className="flex gap-3">
@@ -120,6 +111,21 @@ export default async function ProjectDetail({
             </li>
           ))}
         </ul>
+      </Section>
+
+      <Section title="deep dive">
+        <div className="mdx">
+          <MDXRemote
+            source={content}
+            components={mdxComponents}
+            options={{
+              mdxOptions: {
+                remarkPlugins: [remarkGfm],
+                rehypePlugins: [[rehypePrettyCode, prettyCodeOptions]],
+              },
+            }}
+          />
+        </div>
       </Section>
 
       <Section title="screenshots">
@@ -162,7 +168,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
           <span className="mr-2 h-px w-6 inline-block align-middle bg-[color:var(--signal)]/40" />
           {title}
         </h2>
-        <div className="prose prose-invert max-w-none text-sm leading-relaxed text-foreground/90 sm:text-base">
+        <div className="max-w-none text-sm leading-relaxed text-foreground/90 sm:text-base">
           {children}
         </div>
       </section>

@@ -5,7 +5,8 @@ import { Typewriter } from "@/components/typewriter";
 import { ProjectCard } from "@/components/project-card";
 import { SectionHeading } from "@/components/section-heading";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion-primitives";
-import { projects, skillGroups, certs, writeups } from "@/lib/data";
+import { skillGroups, certs } from "@/lib/data";
+import { getAllProjects, getAllWriteups } from "@/lib/posts";
 
 export const metadata: Metadata = {
   title: { absolute: "Janith Godage — Offensive Security & Tooling" },
@@ -19,7 +20,8 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
-  const featured = projects.filter((p) => p.featured);
+  const featured = getAllProjects().filter((p) => p.featured);
+  const writeups = getAllWriteups();
   return (
     <div>
       {/* HERO */}

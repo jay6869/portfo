@@ -214,3 +214,122 @@
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ---------- MDX prose ---------- */
+/* Mirrors the manual body styling the original detail pages used (no Tailwind
+   typography plugin in this project) and themes rehype-pretty-code output to
+   match the terminal code-block aesthetic. */
+
+.mdx {
+  font-size: 15px;
+  line-height: 1.75;
+  color: color-mix(in oklab, var(--foreground) 90%, transparent);
+}
+
+.mdx > * + * { margin-top: 1.4rem; }
+
+.mdx p { margin-top: 1.4rem; }
+
+.mdx strong { color: var(--foreground); font-weight: 600; }
+
+.mdx a { color: var(--signal); }
+
+.mdx ul {
+  list-style: none;
+  padding-left: 0.25rem;
+  margin-top: 1.4rem;
+}
+.mdx ul > li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-top: 0.5rem;
+}
+.mdx ul > li::before {
+  content: "▸";
+  position: absolute;
+  left: 0;
+  color: var(--signal);
+}
+
+.mdx ol {
+  list-style: decimal;
+  padding-left: 1.4rem;
+  margin-top: 1.4rem;
+}
+.mdx ol > li { margin-top: 0.5rem; padding-left: 0.25rem; }
+.mdx ol > li::marker { color: var(--signal); font-family: var(--font-mono); font-size: 0.85em; }
+
+.mdx blockquote {
+  border-left: 2px solid color-mix(in oklab, var(--signal) 40%, transparent);
+  padding-left: 1rem;
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+.mdx hr { border: 0; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+
+/* Inline code (not inside a highlighted block) */
+.mdx :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  padding: 0.12rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 0.3rem;
+  background: #0f0f0f;
+  color: oklch(0.85 0.01 180);
+}
+
+/* rehype-pretty-code: figure wraps optional figcaption (title="…") + pre */
+.mdx figure[data-rehype-pretty-code-figure] {
+  margin-top: 1.6rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface);
+}
+
+.mdx figcaption[data-rehype-pretty-code-title] {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+  padding: 0.5rem 0.85rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.mdx pre {
+  overflow-x: auto;
+  padding: 1rem;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  background: var(--surface);
+}
+/* When a figure provides chrome, the inner <pre> shouldn't double up borders */
+.mdx figure[data-rehype-pretty-code-figure] > pre { border: 0; }
+/* Bare pre (no title) still gets the bordered card */
+.mdx > pre,
+.mdx p + pre {
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+}
+
+.mdx pre code {
+  display: grid;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: inherit;
+}
+.mdx pre code > [data-line] { padding: 0 0.15rem; }
+
+/* Highlighted lines / words (rehype-pretty-code) tinted with the signal color */
+.mdx [data-highlighted-line] {
+  background: color-mix(in oklab, var(--signal) 10%, transparent);
+  box-shadow: inset 2px 0 0 var(--signal);
+}
+.mdx [data-highlighted-chars] {
+  background: color-mix(in oklab, var(--signal) 18%, transparent);
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.2rem;
+}
