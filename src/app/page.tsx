@@ -5,6 +5,7 @@ import { Typewriter } from "@/components/typewriter";
 import { ProjectCard } from "@/components/project-card";
 import { SectionHeading } from "@/components/section-heading";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion-primitives";
+import { CertRoadmap } from "@/components/cert-roadmap";
 import { skillGroups, certs } from "@/lib/data";
 import { getAllProjects, getAllWriteups } from "@/lib/posts";
 
@@ -161,39 +162,11 @@ export default function Home() {
         <SectionHeading
           eyebrow="learning roadmap"
           title="Certifications in flight."
+          description="A sequenced path — PortSwigger and HTB Academy in parallel now, ISC2 CC alongside, OSCP as the capstone."
         />
-        <Stagger className="grid gap-3 sm:gap-4 md:grid-cols-2">
-          {certs.map((c) => (
-            <StaggerItem key={c.name} className="hairline rounded-lg bg-[color:var(--surface)] p-4 sm:p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                    {c.provider}
-                  </div>
-                  <div className="mt-1 truncate text-sm font-medium text-foreground sm:text-base">{c.name}</div>
-                </div>
-                <span className={`mono shrink-0 rounded border px-2 py-0.5 text-[10px] tracking-widest ${
-                  c.status === "In progress"
-                    ? "border-[color:var(--signal)]/40 text-[color:var(--signal)] bg-[color:var(--signal)]/5"
-                    : "border-border text-muted-foreground"
-                }`}>
-                  {c.status}
-                </span>
-              </div>
-              <div className="mt-4">
-                <div className="h-1 w-full overflow-hidden rounded-full bg-[#1a1a1a]">
-                  <div
-                    className="h-full rounded-full bg-[color:var(--signal)] shadow-[0_0_10px_var(--signal)]"
-                    style={{ width: `${c.progress}%` }}
-                  />
-                </div>
-                <div className="mono mt-2 flex justify-between text-[10px] text-muted-foreground">
-                  <span>progress</span><span>{c.progress}%</span>
-                </div>
-              </div>
-            </StaggerItem>
-          ))}
-        </Stagger>
+        <div className="mx-auto max-w-2xl">
+          <CertRoadmap certs={certs} />
+        </div>
       </section>
 
       {/* WRITEUPS */}

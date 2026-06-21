@@ -67,6 +67,12 @@ function byDateDesc<T extends { date: string }>(a: T, b: T): number {
   return a.date < b.date ? 1 : a.date > b.date ? -1 : 0;
 }
 
+// Auto reading time from the MDX body (~200 wpm, min 1 min).
+function readingTime(content: string): string {
+  const words = content.trim().split(/\s+/).filter(Boolean).length;
+  return `${Math.max(1, Math.round(words / 200))} min read`;
+}
+
 // ---- Projects --------------------------------------------------------------
 
 export function getProjectSlugs(): string[] {
@@ -104,8 +110,9 @@ export function getAllWriteups(): WriteupMeta[] {
   return getWriteupSlugs()
     .map((slug) => {
       const raw = readFile(WRITEUPS_DIR, slug)!;
-      const { data } = matter(raw);
-      return { slug, ...(data as Omit<WriteupMeta, "slug">) };
+      const { data, content } = matter(raw);
+      // readingTime is computed from the body, not authored in frontmatter.
+      return { slug, ...(data as Omit<WriteupMeta, "slug">), readingTime: readingTime(content) };
     })
     .sort(byDateDesc);
 }
@@ -114,7 +121,10 @@ export function getWriteup(slug: string): Loaded<WriteupMeta> | null {
   const raw = readFile(WRITEUPS_DIR, slug);
   if (raw === null) return null;
   const { data, content } = matter(raw);
-  return { meta: { slug, ...(data as Omit<WriteupMeta, "slug">) }, content };
+  return {
+    meta: { slug, ...(data as Omit<WriteupMeta, "slug">), readingTime: readingTime(content) },
+    content,
+  };
 }
 
 export function getWriteupTags(): string[] {
@@ -123,17 +133,27 @@ export function getWriteupTags(): string[] {
 
 // ---- Cross-linking ---------------------------------------------------------
 
-// Writeups whose tags overlap (fuzzily) with a project's tags.
+// Fuzzy tag overlap used for cross-linking in both directions.
+function tagsOverlap(a: string[], b: string[]): boolean {
+  return a.some((x) =>
+    b.some(
+      (y) =>
+        x.toLowerCase().includes(y.toLowerCase()) ||
+        y.toLowerCase().includes(x.toLowerCase()),
+    ),
+  );
+}
+
+// Writeups whose tags overlap with a project's tags.
 export function relatedWriteups(project: ProjectMeta, limit = 3): WriteupMeta[] {
   return getAllWriteups()
-    .filter((w) =>
-      w.tags.some((t) =>
-        project.tags.some(
-          (pt) =>
-            pt.toLowerCase().includes(t.toLowerCase()) ||
-            t.toLowerCase().includes(pt.toLowerCase()),
-        ),
-      ),
-    )
+    .filter((w) => tagsOverlap(w.tags, project.tags))
+    .slice(0, limit);
+}
+
+// Projects whose tags overlap with a writeup's tags (reverse cross-link).
+export function relatedProjects(writeup: WriteupMeta, limit = 3): ProjectMeta[] {
+  return getAllProjects()
+    .filter((p) => tagsOverlap(p.tags, writeup.tags))
     .slice(0, limit);
 }
