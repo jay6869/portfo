@@ -55,15 +55,9 @@ export default function Home() {
 
           <Reveal delay={0.1}>
             <h1 className="sr-only">Janith Godage — Offensive Security &amp; Tooling</h1>
-            <div className="mt-3 hidden sm:block" aria-hidden="true">
+            <div className="mt-3" aria-hidden="true">
               <AsciiBanner art={ASCII_JANITH} />
               <AsciiBanner art={ASCII_GODAGE} className="mt-1" />
-            </div>
-            <div
-              className="mt-3 block text-4xl font-semibold leading-[1.05] tracking-tight sm:hidden"
-              aria-hidden="true"
-            >
-              Janith Godage.
             </div>
           </Reveal>
 

@@ -51,16 +51,19 @@ export function AsciiBanner({
     <div className={`relative ${className}`} aria-hidden={!!label}>
       {label && <span className="sr-only">{label}</span>}
       <pre
-        className="mono whitespace-pre overflow-x-auto text-[7px] leading-[1.05] xs:text-[8px] sm:text-[10px] md:text-[12px] lg:text-[13px]"
-        style={
-          glow
+        className="mono whitespace-pre overflow-x-auto leading-[1.05]"
+        style={{
+          // Fluid size: scales with viewport so the banner fits on mobile
+          // through desktop without being clipped or swapped for plain text.
+          fontSize: "clamp(6px, 2.4vw, 13px)",
+          ...(glow
             ? {
                 color: "var(--signal)",
                 textShadow:
                   "0 0 14px color-mix(in oklab, var(--signal) 45%, transparent)",
               }
-            : undefined
-        }
+            : {}),
+        }}
       >
         {lines.map((line, i) => (
           <motion.span
