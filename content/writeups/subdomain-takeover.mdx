@@ -1,0 +1,61 @@
+---
+title: "Subdomain Takeover: Hunting Dangling DNS"
+date: "2026-06-23"
+excerpt: "A forgotten CNAME pointing at a deprovisioned service is a trusted subdomain waiting to be claimed by someone else. How to find them, why they hurt, and how to shut them down."
+tags: ["Web", "Network"]
+---
+
+Subdomain takeover is one of those bugs that feels too simple to be real — until you claim
+`assets.victim.com` on a third-party service and start serving your own content from *their*
+trusted domain. The root cause is almost always the same: a DNS record outlived the resource
+it pointed to.
+
+## The dangling record
+
+Teams spin up `blog.acme.com` on a SaaS host, point a CNAME at it, then later kill the SaaS
+account — but **forget to remove the DNS record**. Now the CNAME still resolves to, say,
+`acme.github.io`, but GitHub no longer has that site. Anyone who registers that name on the
+provider inherits the subdomain.
+
+The fingerprints are well known per provider — the unclaimed endpoint usually announces itself:
+
+```bash
+# Resolve the chain, then look for an orphaned target
+dig +short blog.acme.com
+# -> acme.github.io.
+
+curl -s https://blog.acme.com | grep -i "there isn't a github pages site here"
+# Classic "claim me" banner. Equivalents exist for S3 (NoSuchBucket),
+# Heroku, Azure, Fastly, Shopify, etc.
+```
+
+At recon scale you enumerate subdomains, resolve each, and flag any whose target points to a
+provider but returns that "unclaimed" signature — the same enrichment step a recon pipeline
+does before it ever ranks a host.
+
+## Why it's worse than it looks
+
+It's tempting to write this off as "they can host a page on a subdomain." The damage is bigger:
+
+- **Cookie theft / session hijinks.** Cookies scoped to `.acme.com` are sent to *every*
+  subdomain — including the one the attacker now controls.
+- **OAuth & redirect abuse.** Allow-lists that trust `*.acme.com` will happily redirect tokens
+  to the hijacked host.
+- **Phishing with a real domain.** Credential pages on a legitimately-owned subdomain sail past
+  the usual "check the URL" advice.
+- **CSP / CORS trust.** Policies that whitelist the parent domain extend that trust to the
+  attacker.
+
+## Shutting it down
+
+The fix is unglamorous and permanent:
+
+1. **Remove dangling records** the moment a service is decommissioned — make DNS cleanup part
+   of the teardown checklist, not an afterthought.
+2. **Inventory continuously.** Periodically resolve every record and diff against what's
+   actually provisioned; dangling CNAMEs are easy to detect automatically.
+3. **Claim-and-hold** critical names, or use providers that bind the DNS target to your account
+   so a stranger can't re-register it.
+
+The whole class of bug exists in the gap between "we stopped using it" and "we removed the
+pointer to it." Close that gap and takeover simply isn't possible.
