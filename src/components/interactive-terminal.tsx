@@ -68,7 +68,7 @@ const RESPONSES: Record<string, string> = {
   "ls projects": "sec-misconfig-finder/   port-scanner/",
   projects: "sec-misconfig-finder/   port-scanner/",
   education: "sliit · bsc (hons) information technology — cybersecurity\n3rd year · gpa: solid · focus: offensive security & detection",
-  contact: "email:    hello@example.com\ngithub:   github.com/janith\nlinkedin: linkedin.com/in/janith\npgp:      on request",
+  contact: "email:    janithzgodage@gmail.com\ngithub:   github.com/jay6869\nlinkedin: linkedin.com/in/janith-godage-6953s\npgp:      on request",
   pwd: "/home/janith",
   "uname -a": "Linux portfolio 6.8.0-kali #1 SMP PREEMPT_DYNAMIC x86_64 GNU/Linux",
 };

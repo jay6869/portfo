@@ -1,8 +1,8 @@
-# Security contact for janithgodage.dev — see https://securitytxt.org
-Contact: mailto:hello@example.com
+# Security contact for janithgodage.live — see https://securitytxt.org
+Contact: mailto:janithzgodage@gmail.com
 Expires: 2027-06-21T00:00:00.000Z
 Preferred-Languages: en
-Canonical: https://janithgodage.dev/.well-known/security.txt
-Policy: https://janithgodage.dev/.well-known/security.txt
+Canonical: https://janithgodage.live/.well-known/security.txt
+Policy: https://janithgodage.live/.well-known/security.txt
 
 # Coordinated disclosure welcome. Please allow time to triage before publishing.

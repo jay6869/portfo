@@ -33,9 +33,9 @@ const PAGECLIP_SITE_KEY = "lvIFqS0kTXGC3DIV3ZPJgpKmr5MtnoSC";
 type Status = "idle" | "sending" | "sent" | "error";
 
 const channels = [
-  { Icon: Mail, label: "email", value: "hello@example.com", href: "mailto:hello@example.com" },
-  { Icon: Github, label: "github", value: "github.com/janith", href: "https://github.com" },
-  { Icon: Linkedin, label: "linkedin", value: "linkedin.com/in/janith", href: "https://linkedin.com" },
+  { Icon: Mail, label: "email", value: "janithzgodage@gmail.com", href: "mailto:janithzgodage@gmail.com" },
+  { Icon: Github, label: "github", value: "github.com/jay6869", href: "https://github.com/jay6869" },
+  { Icon: Linkedin, label: "linkedin", value: "linkedin.com/in/janith-godage-6953s", href: "https://www.linkedin.com/in/janith-godage-6953s/" },
 ];
 
 export function ContactView() {

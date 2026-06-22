@@ -11,17 +11,17 @@ export function Footer() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <a href="https://github.com" target="_blank" rel="noreferrer noopener"
+          <a href="https://github.com/jay6869" target="_blank" rel="noreferrer noopener"
              className="hairline hover-lift inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
              aria-label="GitHub">
             <Github className="size-4" />
           </a>
-          <a href="https://linkedin.com" target="_blank" rel="noreferrer noopener"
+          <a href="https://www.linkedin.com/in/janith-godage-6953s/" target="_blank" rel="noreferrer noopener"
              className="hairline hover-lift inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
              aria-label="LinkedIn">
             <Linkedin className="size-4" />
           </a>
-          <a href="mailto:hello@example.com"
+          <a href="mailto:janithzgodage@gmail.com"
              className="hairline hover-lift inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
              aria-label="Email">
             <Mail className="size-4" />
