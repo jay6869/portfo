@@ -1,16 +1,36 @@
 "use client";
 
 import { useState } from "react";
+import Script from "next/script";
 import { z } from "zod";
 import { Github, Linkedin, Mail, Lock, Send, Check } from "lucide-react";
 import { SectionHeading } from "@/components/section-heading";
 import { Reveal } from "@/components/motion-primitives";
+
+declare global {
+  interface Window {
+    Pageclip?: {
+      send: (
+        siteKey: string,
+        formName: string | null,
+        data: unknown,
+        cb: (error: Error | null, response?: unknown) => void,
+      ) => void;
+    };
+  }
+}
 
 const schema = z.object({
   name: z.string().trim().min(1, "name is required").max(100),
   email: z.string().trim().email("invalid email").max(255),
   message: z.string().trim().min(10, "message is too short").max(2000),
 });
+
+// Pageclip site key — the public, browser-safe identifier from the form action
+// URL (https://send.pageclip.co/<siteKey>). NOT the secret `api_…` key.
+const PAGECLIP_SITE_KEY = "lvIFqS0kTXGC3DIV3ZPJgpKmr5MtnoSC";
+
+type Status = "idle" | "sending" | "sent" | "error";
 
 const channels = [
   { Icon: Mail, label: "email", value: "hello@example.com", href: "mailto:hello@example.com" },
@@ -20,11 +40,12 @@ const channels = [
 
 export function ContactView() {
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [sent, setSent] = useState(false);
+  const [status, setStatus] = useState<Status>("idle");
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const fd = new FormData(e.currentTarget);
+    const form = e.currentTarget; // capture before any await — React nulls currentTarget
+    const fd = new FormData(form);
     const parsed = schema.safeParse({
       name: fd.get("name"),
       email: fd.get("email"),
@@ -37,11 +58,30 @@ export function ContactView() {
       return;
     }
     setErrors({});
-    setSent(true);
+
+    const pageclip = window.Pageclip;
+    if (!pageclip) {
+      // Library hasn't loaded yet (slow network / blocked). Fail gracefully.
+      setStatus("error");
+      return;
+    }
+
+    setStatus("sending");
+    pageclip.send(PAGECLIP_SITE_KEY, null, parsed.data, (error) => {
+      if (error) {
+        setStatus("error");
+        return;
+      }
+      form.reset();
+      setStatus("sent");
+    });
   };
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
+      {/* Pageclip client library — delivers form submissions to the dashboard. */}
+      <Script src="https://s.pageclip.co/v1/pageclip.js" strategy="afterInteractive" />
+
       <SectionHeading
         eyebrow="initiate handshake"
         title="Open a channel."
@@ -92,15 +132,26 @@ export function ContactView() {
 
           <button
             type="submit"
-            disabled={sent}
+            disabled={status === "sending" || status === "sent"}
             className="mono group inline-flex w-fit items-center gap-2 rounded-md bg-[color:var(--signal)] px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-black shadow-[0_0_30px_-6px_var(--signal)] transition-all hover:shadow-[0_0_40px_-4px_var(--signal)] disabled:opacity-60"
           >
-            {sent ? <><Check className="size-3.5" /> message queued</> : <><Send className="size-3.5" /> send</>}
+            {status === "sent" ? (
+              <><Check className="size-3.5" /> message sent</>
+            ) : status === "sending" ? (
+              <><Send className="size-3.5 animate-pulse" /> sending…</>
+            ) : (
+              <><Send className="size-3.5" /> send</>
+            )}
           </button>
 
-          {sent && (
+          {status === "sent" && (
             <p className="mono text-xs text-[color:var(--signal)]">
               <span className="text-muted-foreground">$</span> 200 OK — i&apos;ll reply within 48h.
+            </p>
+          )}
+          {status === "error" && (
+            <p className="mono text-xs text-destructive">
+              <span className="text-muted-foreground">$</span> send failed — try again, or email me directly.
             </p>
           )}
         </form>

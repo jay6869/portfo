@@ -19,11 +19,16 @@ export interface Cert {
   provider: string;
   progress: number;
   status: "In progress" | "Planned" | "Complete";
+  /** Public verification / badge link for earned credentials. */
+  credentialUrl?: string;
 }
 
 export const certs: Cert[] = [
-  { name: "Web Security Academy", provider: "PortSwigger", progress: 62, status: "In progress" },
-  { name: "Pentester Path", provider: "HackTheBox Academy", progress: 48, status: "In progress" },
-  { name: "Certified in Cybersecurity (CC)", provider: "ISC2", progress: 30, status: "In progress" },
-  { name: "OSCP", provider: "OffSec", progress: 0, status: "Planned" },
+  {
+    name: "Introduction to CIP",
+    provider: "OPSWAT Academy",
+    progress: 100,
+    status: "Complete",
+    credentialUrl: "https://learn.opswatacademy.com/certificate/U6ckeSIWaw",
+  },
 ];

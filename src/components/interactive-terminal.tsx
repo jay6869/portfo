@@ -28,7 +28,7 @@ const NEOFETCH = `      ▄▄▄▄▄        janith@portfolio
    ▀██▄▄▄▄▄▄▄██▀     focus    offsec · detection eng
      ▀███████▀       editor   nvim · vscode
        ▀▀▀▀▀         uptime   3y · still learning
-                     certs    PortSwigger · HTB · ISC2 CC`;
+                     certs    OPSWAT Academy · Intro to CIP`;
 
 // help text is generated from this registry so it never drifts.
 const MANUAL: Record<string, string> = {
@@ -65,8 +65,8 @@ const CHIPS = ["whoami", "neofetch", "cat skills", "ls projects", "nmap localhos
 const RESPONSES: Record<string, string> = {
   whoami: "janith godage · cybersecurity undergraduate at sliit · sri lanka\naspiring penetration tester · builder of detection tooling",
   "cat skills": "offensive: burp, sqlmap, ffuf, metasploit\nrecon:     nmap, wireshark, responder\ndetection: wazuh, suricata, sigma\nenv:       kali, docker, tmux",
-  "ls projects": "dns-exfil-sentinel/   soc-platform/\nwifi-csi-research/    nmap-scanner-api/",
-  projects: "dns-exfil-sentinel/   soc-platform/\nwifi-csi-research/    nmap-scanner-api/",
+  "ls projects": "sec-misconfig-finder/   port-scanner/",
+  projects: "sec-misconfig-finder/   port-scanner/",
   education: "sliit · bsc (hons) information technology — cybersecurity\n3rd year · gpa: solid · focus: offensive security & detection",
   contact: "email:    hello@example.com\ngithub:   github.com/janith\nlinkedin: linkedin.com/in/janith\npgp:      on request",
   pwd: "/home/janith",

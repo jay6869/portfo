@@ -1,0 +1,61 @@
+---
+title: "ASPE — Attack Surface Prioritization Engine"
+type: "PLATFORM"
+date: "2026-06-22"
+oneLiner: "Ingests raw recon, scores every host on a weighted 'interestingness' formula, clusters them semantically, and uses an LLM to rank the top 50 targets with attack-chain reasoning."
+description: "A full pipeline that turns thousands of lines of Nmap/httpx output into a ranked, explained shortlist. It enriches each host, scores it across four weighted dimensions, clusters hosts with embeddings, and hands the result to DeepSeek for a Top-50 ranking — with a pure-algorithmic fallback when the LLM is unavailable."
+tags: ["Tooling", "Network", "Research"]
+stack: ["Python", "FastAPI", "Celery", "PostgreSQL", "pgvector", "Redis", "React", "D3.js", "DeepSeek", "Docker"]
+github: "https://github.com/jay6869/ASPE"
+featured: true
+problem: "Recon is no longer the bottleneck — triage is. A medium scope produces thousands of live hosts, and deciding which handful to actually look at first is slow, subjective, and easy to get wrong under time pressure."
+approach:
+  - "Ingestion: NmapIngestor and HttpxIngestor normalise raw output into a unified Host schema, bulk-loaded into Postgres."
+  - "Enrichment: Wappalyzer fingerprinting, async probing of 30+ sensitive paths, and GeoLite2 geo — all degrading gracefully if a resource is missing."
+  - "Scoring: a weighted Priority = 0.35·Anomaly + 0.30·Exposure + 0.20·Business + 0.15·CVE, mixing IsolationForest anomalies, path-weighted exposure, hostname-keyword business value and NVD CVE lookups."
+  - "Clustering: sentence-transformer embeddings stored in pgvector, HDBSCAN clusters, UMAP for a 2D scatterplot."
+  - "AI orchestration: DeepSeek ranks the Top 50, names clusters and writes an executive summary — Redis-cached, with a fallback to the algorithmic scores if the API fails."
+outcome:
+  - "Collapses raw Nmap/httpx dumps into a ranked, reasoned Top-50 with a live React + D3 view."
+  - "Never hard-fails: the LLM, Wappalyzer, GeoLite and NVD layers all degrade gracefully, so the pipeline still produces scores offline."
+---
+
+The uncomfortable truth about modern recon is that the scanning is the easy part. Point the
+right tools at a scope and you'll drown in live hosts within minutes. The skill — and the
+time sink — is deciding what to actually open first. ASPE is an attempt to encode that triage
+judgement into a pipeline instead of leaving it to gut feel at 2am.
+
+## The score is the opinion
+
+Everything upstream — ingestion, enrichment, embeddings — exists to feed one number. The
+weighting *is* the methodology: it says anomaly and exposure matter most, business context
+and raw CVE count less.
+
+```python title="app/scorers/priority.py" {2}
+def priority(host: Host) -> float:
+    return (
+        0.35 * host.anomaly      # IsolationForest: how unusual is this host?
+        + 0.30 * host.exposure   # path-weighted sensitive-surface score
+        + 0.20 * host.business   # hostname-keyword value (admin, vpn, pay…)
+        + 0.15 * host.cve        # NVD lookup on detected versions
+    )
+```
+
+Putting the formula front-and-centre is deliberate: a black-box "trust me, this host is a 9.2"
+is useless to an operator. A weighted sum you can read — and argue with — is something you can
+actually tune per engagement.
+
+## The LLM ranks, it doesn't decide
+
+DeepSeek sits at the *end* of the pipeline, not the middle. It reorders the already-scored
+shortlist into a Top 50, names the semantic clusters, and writes the executive summary — the
+narrative work LLMs are good at. Critically, it's wrapped so that if the API errors or the key
+is missing, the system falls straight back to the deterministic algorithmic ranking. The AI is
+an enhancement layer, never a single point of failure.
+
+## Built as a real system
+
+It's not a script — it's FastAPI for the API surface, Celery + Redis for the long-running
+enrich→score→cluster→rank job, Postgres with pgvector for both relational data and embedding
+search, and a React + D3 front end that streams progress over WebSocket and renders the
+clusters as an interactive scatterplot. `docker compose up` brings the whole thing online.

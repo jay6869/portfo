@@ -1,0 +1,58 @@
+---
+title: "Security Misconfiguration Finder"
+type: "TOOL"
+date: "2026-06-04"
+oneLiner: "FastAPI web scanner that fingerprints common web misconfigurations and scores them into a consultant-grade report."
+description: "A web application that crawls a target's surface for the boring-but-deadly misconfigurations — missing security headers, banner leakage, open directory listings and exposed sensitive files — then turns the findings into a 100-point risk score with plain-language fixes."
+tags: ["Web", "Tooling"]
+stack: ["Python", "FastAPI", "Uvicorn", "BeautifulSoup", "Pydantic", "SQLite"]
+github: "https://github.com/jay6869/sec-misconfig-finder"
+featured: true
+problem: "The findings that actually sink an assessment are rarely exotic — they're a missing CSP, a leaked server banner, an open /backup/ directory, an exposed .env. They're tedious to check by hand and easy to miss under time pressure."
+approach:
+  - "Four focused scanners: HTTP security headers, server banner leakage, directory listing across 26 common paths, and sensitive-file exposure across 50+ paths (.env, .git, dumps, SSH keys, phpinfo, wp-config)."
+  - "A 100-point risk engine with severity-weighted deductions (Low −5 → Critical −30) that collapses raw findings into a single Safe / Medium / High verdict."
+  - "Every finding ships with a why-it's-dangerous explanation, how attackers exploit it, and a concrete fix command."
+  - "SlowAPI rate limiting (10 scans/min/IP), SQLite scan history, JSON export and structured logging."
+outcome:
+  - "Turns a manual checklist into a repeatable, exportable report in seconds."
+  - "Risk scoring makes results triage-able — a number a non-specialist stakeholder can act on."
+---
+
+Most of the damage in a web assessment doesn't come from a clever chained exploit. It comes
+from the unglamorous stuff: a header that was never set, a directory that was never locked
+down, a file that was never meant to ship. SMF automates the part of recon that's pure
+diligence so the human time goes to the interesting findings.
+
+## Severity is the product, not the finding
+
+A raw list of "X is missing" is noise. The value is in turning that into a verdict someone
+can act on, so each check feeds a single weighted score.
+
+```python title="risk.py" {3,9}
+DEDUCTIONS = {"low": 5, "medium": 10, "high": 20, "critical": 30}
+
+def score(findings: list[Finding]) -> int:
+    total = 100
+    for f in findings:
+        total -= DEDUCTIONS[f.severity]
+    return max(0, total)
+
+def verdict(s: int) -> str:
+    return "Safe" if s >= 80 else "Medium Risk" if s >= 50 else "High Risk"
+```
+
+The two highlighted lines are the whole story: severities map to point deductions, and a
+single threshold function turns the number into language a stakeholder understands.
+
+## Findings should teach
+
+A scanner that just flags `X-Frame-Options: missing` trains people to ignore it. Each finding
+carries three things — *why it's dangerous*, *how it gets exploited*, and *the exact fix* —
+so the report doubles as a remediation guide rather than a list of homework.
+
+## Built to be exposed safely
+
+Because the tool itself makes requests to arbitrary targets, it's rate-limited per IP via
+SlowAPI, every request body is validated through Pydantic models, and scan history lands in
+SQLite so results are reproducible and exportable rather than scrolling past in a terminal.

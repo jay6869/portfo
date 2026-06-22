@@ -1,3 +1,4 @@
+import { BadgeCheck, ExternalLink } from "lucide-react";
 import { Stagger, StaggerItem } from "@/components/motion-primitives";
 import type { Cert } from "@/lib/data";
 
@@ -45,10 +46,24 @@ export function CertRoadmap({ certs }: { certs: Cert[] }) {
                       {c.name}
                     </div>
                   </div>
-                  <span className={`mono shrink-0 rounded border px-2 py-0.5 text-[10px] tracking-widest ${pillByStatus[c.status]}`}>
+                  <span className={`mono inline-flex shrink-0 items-center gap-1 rounded border px-2 py-0.5 text-[10px] tracking-widest ${pillByStatus[c.status]}`}>
+                    {c.status === "Complete" && <BadgeCheck className="size-3" />}
                     {c.status}
                   </span>
                 </div>
+
+                {c.credentialUrl && (
+                  <a
+                    href={c.credentialUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mono mt-3 inline-flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-[color:var(--signal)]/80 transition-colors hover:text-[color:var(--signal)]"
+                  >
+                    <BadgeCheck className="size-3.5" />
+                    view credential
+                    <ExternalLink className="size-3" />
+                  </a>
+                )}
 
                 {c.status !== "Planned" && (
                   <div className="mt-4">

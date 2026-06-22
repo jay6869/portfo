@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Download, Terminal as TerminalIcon } from "lucide-react";
-import { Typewriter } from "@/components/typewriter";
 import { ProjectCard } from "@/components/project-card";
 import { SectionHeading } from "@/components/section-heading";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion-primitives";
 import { CertRoadmap } from "@/components/cert-roadmap";
+import {
+  AsciiBanner,
+  AsciiDivider,
+  ScrambleText,
+  ASCII_JANITH,
+  ASCII_GODAGE,
+} from "@/components/ascii";
 import { skillGroups, certs } from "@/lib/data";
 import { getAllProjects, getAllWriteups } from "@/lib/posts";
 
@@ -48,19 +54,28 @@ export default function Home() {
           </Reveal>
 
           <Reveal delay={0.1}>
-            <h1 className="mt-3 text-4xl font-semibold leading-[1.05] tracking-tight sm:text-6xl md:text-7xl">
+            <h1 className="sr-only">Janith Godage — Offensive Security &amp; Tooling</h1>
+            <div className="mt-3 hidden sm:block" aria-hidden="true">
+              <AsciiBanner art={ASCII_JANITH} />
+              <AsciiBanner art={ASCII_GODAGE} className="mt-1" />
+            </div>
+            <div
+              className="mt-3 block text-4xl font-semibold leading-[1.05] tracking-tight sm:hidden"
+              aria-hidden="true"
+            >
               Janith Godage.
-            </h1>
+            </div>
           </Reveal>
 
           <Reveal delay={0.18}>
             <div className="mono mt-6 min-h-[1.6em] text-base sm:text-lg md:text-xl">
-              <span className="text-muted-foreground">role:</span>{" "}
-              <Typewriter
+              <span className="text-muted-foreground">role:=</span>{" "}
+              <ScrambleText
                 words={[
-                  "penetration tester",
-                  "security tooling builder",
-                  "CTF player",
+                  "penetration_tester",
+                  "tooling_builder",
+                  "ctf_player",
+                  "detection_engineer",
                 ]}
               />
             </div>
@@ -84,7 +99,8 @@ export default function Home() {
                 <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
               </Link>
               <a
-                href="#"
+                href="/janith-godage-cv.pdf"
+                download="Janith-Godage-CV.pdf"
                 className="mono hairline inline-flex items-center gap-2 rounded-md px-4 py-2.5 text-xs uppercase tracking-wider text-foreground transition-colors hover:border-[color:var(--signal)]/50 hover:text-[color:var(--signal)]"
               >
                 <Download className="size-3.5" />
@@ -112,6 +128,7 @@ export default function Home() {
 
       {/* FEATURED PROJECTS */}
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+        <AsciiDivider label="featured.projects" className="mb-6" />
         <SectionHeading
           eyebrow="featured projects"
           title="Things I've built, broken, and shipped."
@@ -136,6 +153,7 @@ export default function Home() {
       {/* SKILLS */}
       <section className="border-y border-border bg-[color:var(--surface)]/30">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+          <AsciiDivider label="skills.toolchain" className="mb-6" />
           <SectionHeading
             eyebrow="skills · by domain"
             title="Tooling I reach for."
@@ -159,10 +177,11 @@ export default function Home() {
 
       {/* ROADMAP */}
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+        <AsciiDivider label="roadmap.certs" className="mb-6" />
         <SectionHeading
-          eyebrow="learning roadmap"
-          title="Certifications in flight."
-          description="A sequenced path — PortSwigger and HTB Academy in parallel now, ISC2 CC alongside, OSCP as the capstone."
+          eyebrow="credentials"
+          title="Certifications & badges."
+          description="Verified credentials I've earned, with more course badges on the way as I work through them."
         />
         <div className="mx-auto max-w-2xl">
           <CertRoadmap certs={certs} />
@@ -172,6 +191,7 @@ export default function Home() {
       {/* WRITEUPS */}
       <section className="border-t border-border">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+          <AsciiDivider label="lab.writeups" className="mb-6" />
           <SectionHeading
             eyebrow="latest writeups"
             title="Notes from the lab."

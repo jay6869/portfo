@@ -71,7 +71,11 @@ export default function About() {
       </Reveal>
 
       <Reveal>
-        <a href="#" className="mono mt-8 inline-flex items-center gap-2 rounded-md bg-[color:var(--signal)] px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-black shadow-[0_0_30px_-6px_var(--signal)] hover:shadow-[0_0_40px_-4px_var(--signal)]">
+        <a
+          href="/janith-godage-cv.pdf"
+          download="Janith-Godage-CV.pdf"
+          className="mono mt-8 inline-flex items-center gap-2 rounded-md bg-[color:var(--signal)] px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-black shadow-[0_0_30px_-6px_var(--signal)] hover:shadow-[0_0_40px_-4px_var(--signal)]"
+        >
           <Download className="size-3.5" /> download cv · pdf
         </a>
       </Reveal>

@@ -1,0 +1,53 @@
+---
+title: "PortScan"
+type: "TOOL"
+date: "2026-05-29"
+oneLiner: "Browser-based recon console — TCP port scanning plus subdomain and virtual-host discovery, running entirely on localhost."
+description: "A self-hosted reconnaissance tool built on Node.js and Express with a vanilla front end. It does TCP connect scanning, subdomain enumeration and virtual-host discovery, streams results live, and ships with the hardening you need before putting it on a domain."
+tags: ["Network", "Tooling"]
+stack: ["Node.js", "Express", "Vanilla JS", "Server-Sent Events"]
+github: "https://github.com/jay6869/port-scanner"
+featured: true
+problem: "Hosted recon tools want an account, a subscription, or your target list on someone else's server. For quick authorized checks you just want something that runs on your own machine, with no external dependencies and no data leaving localhost."
+approach:
+  - "TCP connect scanning with configurable port range, timeout and concurrency, so you can trade speed against politeness."
+  - "Subdomain and virtual-host discovery tabs driven by bounded wordlists, plus a history panel to rerun recent jobs."
+  - "Optional Server-Sent Events streaming so open ports appear as they're found instead of after the whole sweep."
+  - "Deployment hardening behind env vars: HTTP basic auth, rate limiting, and server-side ceilings on ports-per-scan and wordlist size."
+outcome:
+  - "Zero-config local recon — `npm install`, `node server.js`, open localhost."
+  - "Safe to publish: oversized scans and huge wordlists are rejected on the server before any work starts."
+---
+
+PortScan started from a simple irritation: every time I wanted to sanity-check what was
+listening on a host I was authorized to test, the convenient tools wanted an account and the
+unconvenient ones wanted a terminal incantation. So it's a small Express app that runs on
+your laptop, talks to nothing external, and presents recon as a browser console.
+
+## The interesting work is the guardrails
+
+The scanning itself is unremarkable — bounded-concurrency TCP connects with a timeout. What
+takes thought is making the thing safe to expose, because a recon tool on a public URL is an
+SSRF-and-abuse magnet. All of that is enforced server-side, before any scan runs.
+
+```bash title=".env / host config"
+PORTSCAN_BASIC_AUTH_USER=your-user
+PORTSCAN_BASIC_AUTH_PASSWORD=your-strong-password
+PORTSCAN_RATE_LIMIT_MAX=20
+PORTSCAN_RATE_LIMIT_WINDOW_MS=60000
+PORTSCAN_MAX_PORTS_PER_SCAN=2048
+PORTSCAN_MAX_SUBDOMAIN_WORDLIST=200
+PORTSCAN_MAX_VHOST_WORDLIST=200
+PORTSCAN_BODY_LIMIT=32kb
+```
+
+When basic auth is set the browser prompts before the app loads, but the health endpoint
+stays open for uptime checks. The rate limiter and the request ceilings are the real defense:
+a request asking to scan 60,000 ports or enumerate a 50k-entry wordlist is rejected at the
+edge rather than allowed to melt the box.
+
+## Streaming makes it usable
+
+A scan that returns one big payload at the end feels broken on anything but a tiny range.
+Enabling SSE streaming lets open ports render the moment they're confirmed, which turns a
+"did it hang?" wait into a live feed — and makes long sweeps feel responsive.
