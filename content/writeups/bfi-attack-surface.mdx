@@ -1,0 +1,56 @@
+---
+title: "Beamforming Feedback (BFI): Reviewing the Attack Surface"
+date: "2026-06-23"
+excerpt: "Modern Wi-Fi hands attackers a high-resolution view of the channel for free. A look at what compressed beamforming feedback actually exposes — and where the real risk sits versus the hype."
+tags: ["Research", "WiFi"]
+---
+
+Explicit beamforming is one of the quiet workhorses of 802.11ac/ax. To steer energy toward a
+client, the access point needs to know the channel, so the client (the *beamformee*) measures
+it and sends the AP a **compressed beamforming report** — the V-matrix, encoded as a set of
+angles (φ, ψ). It's a clever, bandwidth-efficient handshake. It's also a gift to anyone with a
+monitor-mode radio.
+
+## The feedback is in the clear
+
+The catch that makes this interesting from a security angle: those beamforming reports ride in
+**management/action frames**, and unless Protected Management Frames are doing more than most
+deployments assume, the angle data is effectively observable on the air. Any passive listener
+in range can collect a per-subcarrier, per-antenna picture of the channel between AP and
+client — without associating, without cracking anything, without touching the data plane.
+
+That's the core of the attack surface: **the channel state itself becomes a side channel.**
+
+```bash
+# Illustrative: pull 802.11 beamforming action frames off a monitor interface.
+# (VHT compressed beamforming is carried in a VHT-category action frame.)
+tshark -i wlan0mon -Y "wlan.fixed.category_code == 21" \
+  -T fields -e wlan.sa -e wlan.da -e frame.time_relative
+```
+
+## What you can actually do with it
+
+The honest framing is a spectrum, from "well-demonstrated" to "lab-only":
+
+- **Sensing & presence (real).** BFI tracks the channel, and the channel changes when people
+  move. Motion detection, occupancy, and coarse activity inference from beamforming feedback
+  are well established — it's CSI-style sensing without needing CSI access.
+- **Fine-grained activity inference (demonstrated).** Research (e.g. keystroke-inference work
+  on beamforming feedback) has shown that with enough signal and a trained model, the feedback
+  leaks far more than "someone is home." This is the headline risk, and it's plausible — but it
+  leans on controlled conditions and model quality.
+- **Active manipulation (narrower).** Forging or replaying feedback to mis-steer beamforming is
+  conceivable as a targeted DoS or steering attack, but it's a much smaller, noisier surface
+  than passive collection and rarely the path of least resistance.
+
+## Where the real risk sits
+
+Strip away the demos and the durable problem is **privacy by passive observation**: a protocol
+feature broadcasts a continuously-updated model of the physical space to anyone listening. The
+exotic keystroke-recovery results grab attention, but the boring, reliable exposure — motion,
+presence, rough activity patterns, leaked at the link layer with no authentication required —
+is the part that actually generalizes across hardware and deployments.
+
+For defenders the levers are limited and unsatisfying: enforce PMF where it helps, treat the RF
+environment as observable, and remember that "encrypted Wi-Fi" says nothing about what the
+*beamforming metadata* gives away. The payload is protected. The shape of the room is not.
