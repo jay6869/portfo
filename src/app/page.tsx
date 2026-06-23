@@ -49,7 +49,7 @@ export default function Home() {
 
           <Reveal delay={0.05}>
             <div className="mono text-xs text-muted-foreground sm:text-sm">
-              <span className="text-[color:var(--signal)]">$</span> hello_world.init()
+              <span className="text-[color:var(--signal)]">$</span> Hell00
             </div>
           </Reveal>
 
