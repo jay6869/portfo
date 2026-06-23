@@ -51,11 +51,11 @@ export function AsciiBanner({
     <div className={`relative ${className}`} aria-hidden={!!label}>
       {label && <span className="sr-only">{label}</span>}
       <pre
-        className="mono whitespace-pre overflow-x-auto leading-[1.05]"
+        className="mono whitespace-pre overflow-hidden leading-[1.05]"
         style={{
           // Fluid size: scales with viewport so the banner fits on mobile
-          // through desktop without being clipped or swapped for plain text.
-          fontSize: "clamp(6px, 2.4vw, 13px)",
+          // through desktop without being clipped or showing a scrollbar.
+          fontSize: "clamp(6px, 2.2vw, 13px)",
           ...(glow
             ? {
                 color: "var(--signal)",
