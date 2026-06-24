@@ -1,0 +1,121 @@
+---
+title: "LLMNR/NBT-NS Spoofing: Free Hashes on the LAN"
+date: "2026-06-24"
+excerpt: "Two legacy name-resolution fallbacks, enabled by default in Windows, will broadcast a credential-bearing authentication to whoever answers first. A step-by-step lab walkthrough — and how to switch it off."
+tags: ["Network", "Windows", "Red Team"]
+---
+
+Link-Local Multicast Name Resolution (LLMNR) and NetBIOS Name Service (NBT-NS) are the
+fallbacks Windows reaches for when DNS can't resolve a name. They are enabled by default, and
+that default is the entire vulnerability. When a lookup fails, the host stops asking a trusted
+server and instead **shouts the name at the whole local segment** — an unauthenticated
+multicast that trusts the first machine to answer.
+
+## Why the fallback is the bug
+
+The resolution order is the problem. DNS fails — a typo, a dead share, a stale mapping — and
+rather than give up, Windows broadcasts "who is `ceh-tools`?" to the link. There is no
+authentication on the question and none on the answer. Any host on the segment can reply,
+"that's me," and the victim will dutifully begin an SMB authentication against the attacker,
+handing over a username and an NTLMv2 challenge/response in the process.
+
+Nothing here is exotic. The attacker doesn't break DNS, doesn't crack anything on the wire, and
+doesn't need to be the intended destination. They just have to answer faster than nobody.
+
+## Lab setup
+
+Two VMs on the same host-only or NAT network so they share a broadcast segment:
+
+- **Kali Linux** — the attacker, with [Responder](https://github.com/lgandx/Responder) and John
+  the Ripper (both ship with Kali).
+- **Windows 10** — the victim. Log in as a normal user and, to make the payoff obvious, set a
+  weak password a non-technical user would actually pick (`qwerty`).
+
+Confirm the two can see each other (`ping` the Windows host from Kali) and note Kali's
+LAN-facing interface name with `ip a` — it's usually `eth0`. Everything below assumes that
+interface.
+
+## Reproducing it step by step
+
+### 1. Start Responder listening
+
+On Kali, point Responder at the interface on the target segment. It answers *every* LLMNR and
+NBT-NS broadcast it hears, claiming to be whatever host was asked for. Run `responder -h` first
+if you want to see the toggles.
+
+```bash
+sudo responder -I eth0
+```
+
+Leave it running. It prints a banner, lists the poisoners and rogue servers it has armed (SMB,
+HTTP, etc.), then sits idle: `Listening for events...`.
+
+### 2. Trigger name resolution from Windows
+
+Now make the victim look up a name DNS can't resolve — exactly what happens when someone
+mistypes a share or reconnects to a dead drive. On the Windows 10 machine, open the **Run**
+dialog with `Win + R`, type a UNC path to a host that doesn't exist, and press **Enter**:
+
+```text
+\\ceh-tools
+```
+
+DNS has no record for `ceh-tools`, so Windows falls back to LLMNR/NBT-NS and broadcasts the
+name to the segment. Responder answers first, claims to be `ceh-tools`, and Windows opens an SMB
+session against Kali — authenticating with the logged-in user's credentials as it goes.
+
+### 3. Catch the hash
+
+Back on Kali, Responder lights up the moment the victim bites: it prints the source IP, the
+username, and the captured **NTLMv2-SSP** challenge/response. The same material is written to
+disk, one file per protocol and source host:
+
+```bash
+ls /usr/share/responder/logs/
+# SMB-NTLMv2-SSP-10.0.2.39.txt   <- one file per victim IP
+
+cat /usr/share/responder/logs/SMB-NTLMv2-SSP-10.0.2.39.txt
+# WIN10\Dummy::WIN10:1122334455667788:A1B2...::: (the NTLMv2 hash)
+```
+
+### 4. Crack it offline
+
+NTLMv2 responses are salted, so they aren't reversible — but they crack fine against a wordlist,
+and "weak password" is the common case. John the Ripper auto-detects the `netntlmv2` format
+straight from Responder's log; just hand it the file:
+
+```bash
+john /usr/share/responder/logs/SMB-NTLMv2-SSP-10.0.2.39.txt
+# Loaded 4 password hashes (netntlmv2, NTLMv2 C/R [MD4 HMAC-MD5 32/64])
+# Proceeding with wordlist:/usr/share/john/password.lst
+# qwerty           (Dummy)
+# Session completed
+
+# Re-print anything already cracked:
+john --show --format=netntlmv2 /usr/share/responder/logs/SMB-NTLMv2-SSP-10.0.2.39.txt
+```
+
+A cleartext password for a Windows user, pulled out of thin air on the broadcast domain — no
+exploit, no payload, just a default left switched on.
+
+## Where the real risk sits
+
+The durable problem isn't Responder; it's that **two deprecated protocols are still trusted by
+default on networks that have a perfectly good DNS server**. The fix is to remove the fallback
+rather than try to police it:
+
+- **Disable LLMNR** via Group Policy: *Computer Configuration → Administrative Templates →
+  Network → DNS Client → Turn off multicast name resolution*.
+- **Disable NBT-NS** on each adapter (set NetBIOS over TCP/IP to *Disabled*), pushed at scale
+  through DHCP options or a startup script.
+- **Backstop it.** Enforce SMB signing so a relayed authentication can't be replayed, segment
+  the LAN to shrink the broadcast domain, and require passwords that don't fall to a wordlist.
+
+Turn the fallbacks off and the broadcast never happens — there is nothing for an attacker to
+answer.
+
+<Callout>
+This walks through a classic internal-network technique for authorized assessments and lab
+practice. Only run Responder on networks you own or have explicit written permission to test —
+poisoning name resolution on a network you don't control is illegal.
+</Callout>
