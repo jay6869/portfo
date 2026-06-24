@@ -1,0 +1,115 @@
+---
+title: "TCP SYN Flooding: Exhausting the Handshake"
+date: "2026-06-25"
+excerpt: "A SYN flood weaponises the half-open connection: send the first packet of the handshake, never the third, and let the target's backlog fill with connections that never complete. A lab walkthrough with Metasploit and hping3."
+tags: ["Network", "Red Team", "DoS"]
+---
+
+A SYN flood is the textbook denial-of-service primitive, and it works by abusing the TCP
+handshake rather than breaking it. Normally a connection is three packets: the client sends
+**SYN**, the server replies **SYN/ACK** and reserves state for the half-open connection, and the
+client finishes with **ACK**. A SYN flood simply never sends that third packet — it fires SYNs
+and walks away, leaving the server holding a backlog of half-open connections that each occupy
+memory until they time out. Send them faster than they expire and legitimate clients can't get
+a slot.
+
+## Why the half-open state is the weapon
+
+The asymmetry is the whole attack. A SYN is cheap to send; the SYN/ACK and the reserved
+connection state are expensive to hold. Spoofing the source address makes it worse on two
+fronts: the server's SYN/ACK goes to a machine that never asked for it (so no ACK ever comes
+back, guaranteeing the slot stays half-open), and the flood can't be traced back to the
+attacker by source IP. The target spends real resources answering connections that were never
+going to complete.
+
+## Lab setup
+
+Three VMs on the same isolated segment — keep this off any network you don't own:
+
+- **Kali Linux** — the attacker, with Metasploit and hping3.
+- **Windows 10** — the victim, **firewall off** so the open ports are reachable.
+- **Windows Server 2012/2016** — used only as the spoofed source address, to show the flood
+  appearing to come from somewhere other than Kali.
+
+## Reproducing it step by step
+
+### 1. Find an open port
+
+The flood needs a listening port to hammer. Scan the victim with Nmap and pick one that's open
+— on a default Windows box, SMB (`445`) is a reliable target:
+
+```bash
+nmap -p- 10.0.2.15        # Windows 10 IP
+# 135/tcp open  msrpc
+# 139/tcp open  netbios-ssn
+# 445/tcp open  microsoft-ds   <- we'll use this
+```
+
+### 2. Flood with the Metasploit synflood module
+
+Launch Metasploit and load the SYN flood auxiliary. The key options are `RHOST`/`RPORT` (the
+target) and `SHOST` — the **spoofed source address**. Setting `SHOST` to the Windows Server IP
+makes every SYN look like it came from that machine instead of Kali:
+
+```text
+msfconsole
+use auxiliary/dos/tcp/synflood
+set RHOST 10.0.2.15        # Windows 10 (target)
+set RPORT 445
+set SHOST 10.0.2.20        # Windows Server (spoofed source)
+run
+```
+
+Leave `SHOST` unset and the module randomises the source on every packet instead. Either way,
+`run` starts the flood.
+
+### 3. Watch it land on the victim
+
+On the Windows 10 box, open **Wireshark** on the active interface. You'll see a wall of SYNs
+whose source is the **Windows Server** address — confirmation that Kali's IP was spoofed. Then
+open **Task Manager → Performance**: CPU and Ethernet throughput spike and stay high. Let it run
+and the backlog saturates; the host slows and eventually stops answering new connections.
+
+Stop the attack with `Ctrl+C` in Metasploit.
+
+### 4. The one-liner alternative: hping3
+
+`hping3` does the same thing from a single command — a raw packet crafter pointed at the target.
+`-S` sets the SYN flag, `-a` spoofs the source, `-p` picks the port, and `--flood` sends as fast
+as the interface allows (no replies read):
+
+```bash
+hping3 -S 10.0.2.15 -a 10.0.2.42 -p 22 --flood
+#       └ target     └ spoofed src └ port └ as fast as possible
+```
+
+Capture on the victim again and you'll see the same flood — a torrent of SYN packets with no
+completing ACKs, enough to exhaust the connection table on an unprotected host.
+
+## Where the real risk sits
+
+SYN floods are old, which means the defences are mature — the attack only works against hosts
+that haven't turned them on:
+
+- **SYN cookies.** Instead of reserving state on the first SYN, the server encodes the
+  connection details into the sequence number and only allocates resources once a valid ACK
+  comes back. No half-open state to exhaust. Enabled by default on modern Linux; the right first
+  line of defence.
+- **Tune the backlog and timeouts.** A larger SYN backlog and shorter half-open timeout shrink
+  the window the attacker is filling.
+- **Filter spoofed sources.** Ingress/egress filtering (BCP 38) drops packets whose source
+  address couldn't legitimately originate there, which neuters the spoofing that makes the
+  flood untraceable.
+- **Absorb it upstream.** Volumetric floods are ultimately a capacity problem — rate limiting,
+  scrubbing, and a DDoS-mitigation provider matter once the traffic exceeds what one host can
+  shrug off.
+
+The handshake is only exploitable while the server commits resources before the client proves
+it's real. SYN cookies move that commitment to after the proof — and the flood has nothing left
+to exhaust.
+
+<Callout>
+SYN flooding is a denial-of-service attack. Run it only against machines you own on an isolated
+lab network — directing this traffic at systems or networks you don't control is illegal and
+disruptive, even briefly.
+</Callout>
