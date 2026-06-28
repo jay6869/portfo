@@ -33,6 +33,16 @@ export interface WriteupMeta {
   tags: string[];
 }
 
+export interface CheatsheetMeta {
+  slug: string;
+  title: string;
+  date: string;
+  excerpt: string;
+  tags: string[];
+  // Count of `##` sections in the body — surfaced as the card metric.
+  sections: number;
+}
+
 export interface Loaded<T> {
   meta: T;
   content: string;
@@ -43,6 +53,7 @@ export interface Loaded<T> {
 const CONTENT_DIR = path.join(process.cwd(), "content");
 const PROJECTS_DIR = path.join(CONTENT_DIR, "projects");
 const WRITEUPS_DIR = path.join(CONTENT_DIR, "writeups");
+const CHEATSHEETS_DIR = path.join(CONTENT_DIR, "cheatsheets");
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -129,6 +140,41 @@ export function getWriteup(slug: string): Loaded<WriteupMeta> | null {
 
 export function getWriteupTags(): string[] {
   return Array.from(new Set(getAllWriteups().flatMap((w) => w.tags))).sort();
+}
+
+// ---- Cheatsheets -----------------------------------------------------------
+
+// Number of top-level `##` sections in the body — the card's at-a-glance metric.
+function countSections(content: string): number {
+  return (content.match(/^##\s+/gm) ?? []).length;
+}
+
+export function getCheatsheetSlugs(): string[] {
+  return listSlugs(CHEATSHEETS_DIR);
+}
+
+export function getAllCheatsheets(): CheatsheetMeta[] {
+  return getCheatsheetSlugs()
+    .map((slug) => {
+      const raw = readFile(CHEATSHEETS_DIR, slug)!;
+      const { data, content } = matter(raw);
+      return { slug, ...(data as Omit<CheatsheetMeta, "slug" | "sections">), sections: countSections(content) };
+    })
+    .sort(byDateDesc);
+}
+
+export function getCheatsheet(slug: string): Loaded<CheatsheetMeta> | null {
+  const raw = readFile(CHEATSHEETS_DIR, slug);
+  if (raw === null) return null;
+  const { data, content } = matter(raw);
+  return {
+    meta: { slug, ...(data as Omit<CheatsheetMeta, "slug" | "sections">), sections: countSections(content) },
+    content,
+  };
+}
+
+export function getCheatsheetTags(): string[] {
+  return Array.from(new Set(getAllCheatsheets().flatMap((c) => c.tags))).sort();
 }
 
 // ---- Cross-linking ---------------------------------------------------------

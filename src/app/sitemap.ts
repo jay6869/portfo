@@ -1,12 +1,13 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
-import { getAllProjects, getAllWriteups } from "@/lib/posts";
+import { getAllProjects, getAllWriteups, getAllCheatsheets } from "@/lib/posts";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/`, changeFrequency: "monthly", priority: 1 },
     { url: `${SITE_URL}/projects`, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/writeups`, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${SITE_URL}/cheatsheets`, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/about`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE_URL}/contact`, changeFrequency: "yearly", priority: 0.4 },
   ];
@@ -25,5 +26,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticRoutes, ...projectRoutes, ...writeupRoutes];
+  const cheatsheetRoutes: MetadataRoute.Sitemap = getAllCheatsheets().map((c) => ({
+    url: `${SITE_URL}/cheatsheets/${c.slug}`,
+    lastModified: new Date(c.date),
+    changeFrequency: "monthly",
+    priority: 0.7,
+  }));
+
+  return [...staticRoutes, ...projectRoutes, ...writeupRoutes, ...cheatsheetRoutes];
 }

