@@ -3,6 +3,7 @@ import { Download, GraduationCap, Globe, MapPin } from "lucide-react";
 import { SectionHeading } from "@/components/section-heading";
 import { Reveal } from "@/components/motion-primitives";
 import { InteractiveTerminal } from "@/components/interactive-terminal";
+import { GlowCard } from "@/components/ui/spotlight-card";
 
 export const metadata: Metadata = {
   title: "About",
@@ -22,29 +23,35 @@ export default function About() {
       />
 
       <div className="grid gap-6 md:grid-cols-3">
-        <Reveal>
-          <div className="hairline rounded-lg bg-[color:var(--surface)] p-5">
-            <GraduationCap className="size-4 text-[color:var(--signal)]" />
-            <div className="mono mt-3 text-[10px] uppercase tracking-widest text-muted-foreground">education</div>
-            <div className="mt-1 text-sm text-foreground">SLIIT · BSc (Hons) IT</div>
-            <div className="text-xs text-muted-foreground">Cybersecurity, 3rd year</div>
-          </div>
+        <Reveal className="h-full">
+          <GlowCard customSize glowColor="green" className="h-full w-full">
+            <div>
+              <GraduationCap className="size-4 text-[color:var(--signal)]" />
+              <div className="mono mt-3 text-[10px] uppercase tracking-widest text-muted-foreground">education</div>
+              <div className="mt-1 text-sm text-foreground">SLIIT · BSc (Hons) IT</div>
+              <div className="text-xs text-muted-foreground">Cybersecurity, 3rd year</div>
+            </div>
+          </GlowCard>
         </Reveal>
-        <Reveal delay={0.06}>
-          <div className="hairline rounded-lg bg-[color:var(--surface)] p-5">
-            <Globe className="size-4 text-[color:var(--signal)]" />
-            <div className="mono mt-3 text-[10px] uppercase tracking-widest text-muted-foreground">languages</div>
-            <div className="mt-1 text-sm text-foreground">English · Sinhala</div>
-            <div className="text-xs text-muted-foreground">working proficiency in both</div>
-          </div>
+        <Reveal delay={0.06} className="h-full">
+          <GlowCard customSize glowColor="green" className="h-full w-full">
+            <div>
+              <Globe className="size-4 text-[color:var(--signal)]" />
+              <div className="mono mt-3 text-[10px] uppercase tracking-widest text-muted-foreground">languages</div>
+              <div className="mt-1 text-sm text-foreground">English · Sinhala</div>
+              <div className="text-xs text-muted-foreground">working proficiency in both</div>
+            </div>
+          </GlowCard>
         </Reveal>
-        <Reveal delay={0.12}>
-          <div className="hairline rounded-lg bg-[color:var(--surface)] p-5">
-            <MapPin className="size-4 text-[color:var(--signal)]" />
-            <div className="mono mt-3 text-[10px] uppercase tracking-widest text-muted-foreground">based</div>
-            <div className="mt-1 text-sm text-foreground">Sri Lanka</div>
-            <div className="text-xs text-muted-foreground">remote-friendly · GMT+5:30</div>
-          </div>
+        <Reveal delay={0.12} className="h-full">
+          <GlowCard customSize glowColor="green" className="h-full w-full">
+            <div>
+              <MapPin className="size-4 text-[color:var(--signal)]" />
+              <div className="mono mt-3 text-[10px] uppercase tracking-widest text-muted-foreground">based</div>
+              <div className="mt-1 text-sm text-foreground">Sri Lanka</div>
+              <div className="text-xs text-muted-foreground">remote-friendly · GMT+5:30</div>
+            </div>
+          </GlowCard>
         </Reveal>
       </div>
 
