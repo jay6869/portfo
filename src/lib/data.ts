@@ -30,5 +30,11 @@ export const certs: Cert[] = [
     progress: 100,
     status: "Complete",
     credentialUrl: "https://learn.opswatacademy.com/certificate/U6ckeSIWaw",
-  },
+  },{
+    name: "AWS Educate Introduction to Cloud 101",
+    provider: "AWS Educate",
+    progress: 100,
+    status: "Complete",
+    credentialUrl: "https://www.credly.com/badges/24559688-eabe-4309-a372-fa485fdf7a05/public_url",
+  }
 ];
