@@ -36,5 +36,12 @@ export const certs: Cert[] = [
     progress: 100,
     status: "Complete",
     credentialUrl: "https://www.credly.com/badges/24559688-eabe-4309-a372-fa485fdf7a05/public_url",
+  },
+  {
+    name: "Python Essentials 1",
+    provider: "Cisco",
+    progress: 100,
+    status: "Complete",
+    credentialUrl: "https://www.credly.com/badges/e9e3aca2-e1f0-4d30-9353-34d064326fb2/public_url",
   }
 ];
