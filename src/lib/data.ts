@@ -25,12 +25,14 @@ export interface Cert {
 
 export const certs: Cert[] = [
   {
-    name: "Introduction to CIP",
-    provider: "OPSWAT Academy",
-    progress: 100,
-    status: "Complete",
-    credentialUrl: "https://learn.opswatacademy.com/certificate/U6ckeSIWaw",
-  },{
+  name: "AWS Security Fundamentals",
+  provider: "Amazon Web Services (AWS)",
+  progress: 100,
+  status: "Complete",
+  credentialUrl: "",
+  },
+  
+  ,{
     name: "AWS Educate Introduction to Cloud 101",
     provider: "AWS Educate",
     progress: 100,
@@ -43,5 +45,12 @@ export const certs: Cert[] = [
     progress: 100,
     status: "Complete",
     credentialUrl: "https://www.credly.com/badges/e9e3aca2-e1f0-4d30-9353-34d064326fb2/public_url",
+  },
+  {
+    name: "Introduction to CIP",
+    provider: "OPSWAT Academy",
+    progress: 100,
+    status: "Complete",
+    credentialUrl: "https://learn.opswatacademy.com/certificate/U6ckeSIWaw",
   }
 ];
