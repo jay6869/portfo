@@ -31,8 +31,7 @@ export const certs: Cert[] = [
   status: "Complete",
   credentialUrl: "",
   },
-  
-  ,{
+  {
     name: "AWS Educate Introduction to Cloud 101",
     provider: "AWS Educate",
     progress: 100,
