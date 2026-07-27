@@ -25,6 +25,13 @@ export interface Cert {
 
 export const certs: Cert[] = [
   {
+  name: "Certified Cybersecurity Foundations",
+  provider: "Hackviser",
+  progress: 100,
+  status: "Complete",
+  credentialUrl: "https://hackviser.com/verify?id=HV-CORE-L1RRIFZQ",
+},
+  {
   name: "AWS Security Fundamentals",
   provider: "Amazon Web Services (AWS)",
   progress: 100,
