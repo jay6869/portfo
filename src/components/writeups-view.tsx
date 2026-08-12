@@ -20,7 +20,6 @@ export function WriteupsView({ writeups }: { writeups: WriteupMeta[] }) {
   return (
     <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
       <SectionHeading
-        eyebrow="cat ~/writeups/*.md"
         title="Notes from the lab."
         description="Detection ideas, exploit walkthroughs, hardware research. Written for the next person who has to read them."
       />
@@ -28,7 +27,8 @@ export function WriteupsView({ writeups }: { writeups: WriteupMeta[] }) {
       <div className="mb-8 flex flex-wrap gap-2">
         <button
           onClick={() => setTag(null)}
-          className={`mono rounded-md border px-3 py-1.5 text-[11px] uppercase tracking-wider ${
+          aria-pressed={tag === null}
+          className={`mono inline-flex min-h-8 items-center rounded-md border px-3 py-1.5 text-[11px] uppercase tracking-wider ${
             tag === null
               ? "border-[color:var(--signal)]/60 bg-[color:var(--signal)]/10 text-[color:var(--signal)]"
               : "border-border bg-[color:var(--surface)] text-muted-foreground hover:text-foreground"
@@ -40,7 +40,8 @@ export function WriteupsView({ writeups }: { writeups: WriteupMeta[] }) {
           <button
             key={t}
             onClick={() => setTag(t)}
-            className={`mono rounded-md border px-3 py-1.5 text-[11px] uppercase tracking-wider ${
+            aria-pressed={tag === t}
+            className={`mono inline-flex min-h-8 items-center rounded-md border px-3 py-1.5 text-[11px] uppercase tracking-wider ${
               tag === t
                 ? "border-[color:var(--signal)]/60 bg-[color:var(--signal)]/10 text-[color:var(--signal)]"
                 : "border-border bg-[color:var(--surface)] text-muted-foreground hover:text-foreground"
@@ -79,6 +80,18 @@ export function WriteupsView({ writeups }: { writeups: WriteupMeta[] }) {
           ))}
         </motion.div>
       </AnimatePresence>
+
+      {filtered.length === 0 && (
+        <div className="mono mt-10 rounded-md border border-dashed border-border bg-[color:var(--surface)] p-8 text-center text-sm text-muted-foreground">
+          <span className="text-[color:var(--signal)]">$</span> grep -rl &quot;{tag}&quot; ./writeups → no matches
+          <button
+            onClick={() => setTag(null)}
+            className="mt-4 block w-full text-[11px] uppercase tracking-wider text-[color:var(--signal)] hover:underline"
+          >
+            clear filter
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -21,9 +21,13 @@ const spaceGrotesk = Space_Grotesk({
   display: "swap",
 });
 
+// No `weight` array: that loads the VARIABLE font (wght 100–800) as a single
+// file. Two reasons it matters here — the display type asks for 700, which the
+// old static set (400/500/600) never loaded and browsers were faking as
+// synthetic bold; and per-letter weight can only be animated continuously
+// against a variable axis.
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
   variable: "--font-jetbrains-mono",
   display: "swap",
 });
@@ -59,7 +63,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0a0a",
+  themeColor: "#121212",
   width: "device-width",
   initialScale: 1,
 };
@@ -75,6 +79,49 @@ export default function RootLayout({
       className={`dark ${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
     >
       <body>
+        {/* Direction contract, emitted as a real HTML comment so it survives the
+            production build and stays greppable in the shipped output. */}
+        <div
+          hidden
+          dangerouslySetInnerHTML={{
+            __html: `<!--
+THESIS: A live attack-surface graph the visitor stands inside, with the name at
+architectural scale on top of it. Refuses the dev-portfolio card grid and the
+austere all-one-size terminal dump alike.
+OWN-WORLD: Signal green oklch(0.88 0.22 155) on #121212. One monospace voice at
+two extreme registers: JetBrains Mono 700 at 14.5vw, tracking -0.055em, half
+outlined in stroke; against 10.5px labels tracked 0.24em. Phosphor bloom, hairline
+rules, full-bleed rows that scan-wipe on hover.
+STORY: A recruiter meets the name at scale over a network being mapped, reads
+the loop (break it, then catch it), and takes the CV from the hero itself.
+FIRST VIEWPORT: 100svh Three.js node/edge graph with a scan pulse; availability
+label, JANITH / GODAGE stacked huge (second line outlined), positioning line and
+the curl CV command bottom-right.
+FORM: attack-surface graph + editorial scale, candidate 4 of 7, seed 6c87b2b6.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the
+finish review, the verdict, and DESIGN.md
+-->`,
+          }}
+        />
+        {/* Framer Motion renders its `initial` state into the SSR markup, so ~40
+            elements per page (including the wrapper around ALL page content)
+            ship as opacity:0 and are revealed only once the client bundle
+            hydrates. These two escape hatches make that reveal non-fatal:
+            <noscript> covers scripting being switched off, and the failsafe
+            timer covers the bundle failing to load or hydrate at all. Providers
+            clears the timer on mount, so it never fires on a healthy load. */}
+        <noscript
+          dangerouslySetInnerHTML={{
+            __html:
+              '<style>[style*="opacity:0"]{opacity:1!important;transform:none!important}</style>',
+          }}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "window.__revealFailsafe=setTimeout(function(){document.documentElement.classList.add('js-failed')},4000)",
+          }}
+        />
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded focus:bg-[color:var(--signal)] focus:px-3 focus:py-2 focus:text-black"

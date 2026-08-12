@@ -9,14 +9,25 @@
 // HMR also uses a websocket. These relaxations apply to dev only.
 const isDev = process.env.NODE_ENV !== "production";
 
+// Dev-only allowance so impeccable live mode can load.
+const __impeccableLiveDev =
+  process.env.NODE_ENV === "development" ? " http://localhost:8400" : "";
+
+// Pageclip delivers the contact form. The library is fetched from s.pageclip.co
+// and submissions POST to send.pageclip.co — both must be allowed explicitly or
+// the form fails silently on every submission (the library never defines
+// window.Pageclip, so every send takes the "library missing" branch).
+const PAGECLIP_SCRIPT = "https://s.pageclip.co";
+const PAGECLIP_SEND = "https://send.pageclip.co";
+
 const csp = [
   "default-src 'self'",
   "base-uri 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline' ${PAGECLIP_SCRIPT}${isDev ? " 'unsafe-eval'" : ""}${__impeccableLiveDev}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https:",
   "font-src 'self' data:",
-  `connect-src 'self'${isDev ? " ws: http:" : ""}`,
+  `connect-src 'self' ${PAGECLIP_SEND}${isDev ? " ws: http:" : ""}${__impeccableLiveDev}`,
   "object-src 'none'",
   "form-action 'self'",
   "frame-ancestors 'none'",
@@ -38,6 +49,12 @@ const nextConfig = {
   reactStrictMode: true,
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
+  },
+  // /contact was a route until the section moved onto the home page. It was in
+  // the sitemap and may be linked from a CV or an application form, so it
+  // redirects rather than 404s.
+  async redirects() {
+    return [{ source: "/contact", destination: "/#contact", permanent: true }];
   },
 };
 

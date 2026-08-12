@@ -2,23 +2,34 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
+// `contact` is a section of the home page, not a route of its own. Linking to
+// the fragment means it scrolls when you are already home and navigates-then-
+// scrolls from anywhere else, with no extra JS.
 const links = [
   { to: "/", label: "home" },
   { to: "/projects", label: "projects" },
   { to: "/writeups", label: "writeups" },
   { to: "/cheatsheets", label: "cheatsheets" },
   { to: "/about", label: "about" },
-  { to: "/contact", label: "contact" },
+  { to: "/#contact", label: "contact" },
 ] as const;
+
+/** A fragment link is never the "current page", so it must be excluded from
+ *  the active test — otherwise `/#contact` marks home as active too. */
+function isActive(to: string, pathname: string) {
+  if (to.includes("#")) return false;
+  return to === "/" ? pathname === "/" : pathname.startsWith(to);
+}
 
 export function Nav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const toggleRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -28,6 +39,20 @@ export function Nav() {
   }, []);
 
   useEffect(() => { setOpen(false); }, [pathname]);
+
+  // Escape closes the panel and returns focus to the control that opened it —
+  // without this a keyboard user has to tab through every link to get out.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        toggleRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
 
   return (
     <header
@@ -48,7 +73,7 @@ export function Nav() {
 
         <div className="hidden items-center gap-1 md:flex">
           {links.map((l) => {
-            const active = l.to === "/" ? pathname === "/" : pathname.startsWith(l.to);
+            const active = isActive(l.to, pathname);
             return (
               <Link
                 key={l.to}
@@ -69,8 +94,10 @@ export function Nav() {
         </div>
 
         <button
-          aria-label="Toggle menu"
+          ref={toggleRef}
+          aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
+          aria-controls="mobile-nav"
           onClick={() => setOpen((o) => !o)}
           className="hairline inline-flex size-11 items-center justify-center rounded-md md:hidden"
         >
@@ -81,6 +108,7 @@ export function Nav() {
       <AnimatePresence>
         {open && (
           <motion.div
+            id="mobile-nav"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
@@ -89,7 +117,7 @@ export function Nav() {
           >
             <div className="flex flex-col gap-1 px-4 py-3">
               {links.map((l) => {
-                const active = l.to === "/" ? pathname === "/" : pathname.startsWith(l.to);
+                const active = isActive(l.to, pathname);
                 return (
                   <Link
                     key={l.to}

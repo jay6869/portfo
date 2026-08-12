@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { Download, GraduationCap, Globe, MapPin } from "lucide-react";
 import { SectionHeading } from "@/components/section-heading";
 import { Reveal } from "@/components/motion-primitives";
-import { InteractiveTerminal } from "@/components/interactive-terminal";
-import { GlowCard } from "@/components/ui/spotlight-card";
 
 export const metadata: Metadata = {
   title: "About",
@@ -17,43 +15,32 @@ export default function About() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
       <SectionHeading
-        eyebrow="cat ~/about.md"
         title="The short version."
         description="I'm a third-year cybersecurity undergraduate at SLIIT in Sri Lanka. My focus is offensive security — but I write detection logic with the same rigor I write exploit code."
       />
 
-      <div className="grid gap-6 md:grid-cols-3">
-        <Reveal className="h-full">
-          <GlowCard customSize glowColor="green" className="h-full w-full">
-            <div>
-              <GraduationCap className="size-4 text-[color:var(--signal)]" />
-              <div className="mono mt-3 text-[10px] uppercase tracking-widest text-muted-foreground">education</div>
-              <div className="mt-1 text-sm text-foreground">SLIIT · BSc (Hons) IT</div>
-              <div className="text-xs text-muted-foreground">Cybersecurity, 3rd year</div>
+      {/* Facts as hairline rows in the site's own language, replacing a
+          third-party spotlight card that carried its own hsl() colour map,
+          registered a document-level pointermove listener per instance, and
+          injected a duplicate <style> block for each one. */}
+      <dl className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-3">
+        {[
+          { Icon: GraduationCap, k: "education", v: "SLIIT · BSc (Hons) IT", sub: "Cybersecurity, 3rd year" },
+          { Icon: Globe, k: "languages", v: "English · Sinhala", sub: "working proficiency in both" },
+          { Icon: MapPin, k: "based", v: "Sri Lanka", sub: "remote-friendly · GMT+5:30" },
+        ].map(({ Icon, k, v, sub }, i) => (
+          <Reveal key={k} delay={i * 0.06}>
+            <div className="h-full bg-[color:var(--surface)] p-5 transition-colors hover:bg-[color:var(--surface-2)]">
+              <Icon className="size-4 text-[color:var(--signal)]" aria-hidden />
+              <dt className="label mt-3">{k}</dt>
+              <dd className="mt-1.5 text-sm text-foreground">
+                {v}
+                <span className="mt-0.5 block text-xs text-muted-foreground">{sub}</span>
+              </dd>
             </div>
-          </GlowCard>
-        </Reveal>
-        <Reveal delay={0.06} className="h-full">
-          <GlowCard customSize glowColor="green" className="h-full w-full">
-            <div>
-              <Globe className="size-4 text-[color:var(--signal)]" />
-              <div className="mono mt-3 text-[10px] uppercase tracking-widest text-muted-foreground">languages</div>
-              <div className="mt-1 text-sm text-foreground">English · Sinhala</div>
-              <div className="text-xs text-muted-foreground">working proficiency in both</div>
-            </div>
-          </GlowCard>
-        </Reveal>
-        <Reveal delay={0.12} className="h-full">
-          <GlowCard customSize glowColor="green" className="h-full w-full">
-            <div>
-              <MapPin className="size-4 text-[color:var(--signal)]" />
-              <div className="mono mt-3 text-[10px] uppercase tracking-widest text-muted-foreground">based</div>
-              <div className="mt-1 text-sm text-foreground">Sri Lanka</div>
-              <div className="text-xs text-muted-foreground">remote-friendly · GMT+5:30</div>
-            </div>
-          </GlowCard>
-        </Reveal>
-      </div>
+          </Reveal>
+        ))}
+      </dl>
 
       <Reveal>
         <div className="prose prose-invert mt-10 max-w-none text-[15px] leading-[1.75] text-foreground/90">
@@ -87,16 +74,6 @@ export default function About() {
         </a>
       </Reveal>
 
-      <div className="mt-16">
-        <SectionHeading
-          eyebrow="interactive"
-          title="Poke around."
-          description="A small shell. Try whoami, cat skills, ls projects, or help."
-        />
-        <Reveal>
-          <InteractiveTerminal />
-        </Reveal>
-      </div>
     </div>
   );
 }

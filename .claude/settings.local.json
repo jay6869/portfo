@@ -13,7 +13,73 @@
       "Bash(echo \"py: $?\")",
       "Bash(echo \"py3: $?\")",
       "Bash(cd /tmp/ui-ux-pro-max-skill && echo \"===path refs in design_system.py===\"; grep -n \"__file__\\\\|Path\\\\|parent\\\\|templates\\\\|DATA_DIR\\\\|open\\(\\\\|/ \\\\\"\" src/ui-ux-pro-max/scripts/design_system.py | head -25)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "mcp__burp__send_http2_request",
+      "mcp__burp__get_scanner_issues",
+      "Bash(python)",
+      "mcp__burp__url_encode",
+      "Bash(ls -la \"E:/2026Awards/maloffice2026/\")",
+      "Bash(mkdir -p award-presentation)",
+      "Bash(extract-text \"E:/2026Awards/maloffice2026/pp2images.pptx\")",
+      "Bash(which extract-text; ls \"C:/Users/janit/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/7fab3892-0c02-4f7a-9da9-72d0b4c489fb/29f98666-a334-4d32-8b63-72571f5a6118/skills/pptx/\")",
+      "Bash(ls \"C:/Users/janit/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/7fab3892-0c02-4f7a-9da9-72d0b4c489fb/29f98666-a334-4d32-8b63-72571f5a6118/bin/\")",
+      "Bash(find \"C:/Users/janit/AppData/Roaming/Claude/local-agent-mode-sessions/\" -name \"extract-text*\" 2>/dev/null | head -5)",
+      "Bash(find \"C:/Users/janit/AppData/Roaming/Claude/\" -name \"extract*\" 2>/dev/null | head -10)",
+      "Bash(python -c \"import pptx; print\\(pptx.__version__\\)\")",
+      "Bash(pip install *)",
+      "Bash(python -m pip install python-pptx pillow)",
+      "Bash(python extract.py)",
+      "Bash(python resize_images.py)",
+      "Bash(python build.py)",
+      "Bash(python \"C:/Users/janit/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/7fab3892-0c02-4f7a-9da9-72d0b4c489fb/29f98666-a334-4d32-8b63-72571f5a6118/skills/pptx/scripts/office/soffice.py\" --headless --convert-to pdf Mallawapitiya_Award_2026.pptx)",
+      "Bash(which soffice; ls \"/c/Program Files/LibreOffice/program/soffice.exe\" 2>/dev/null)",
+      "Bash(ls \"/c/Program Files/LibreOffice/program/soffice.exe\" 2>&1; ls \"/c/Program Files \\(x86\\)/LibreOffice/program/soffice.exe\" 2>&1)",
+      "Bash(python -c \"import win32com.client\")",
+      "Bash(python -m pip install pywin32)",
+      "Bash(python -c \"import win32com.client; print\\('ok'\\)\")",
+      "Bash(python to_pdf.py)",
+      "Read(//c/Program Files/Microsoft Office//**)",
+      "Read(//c/Program Files \\(x86\\)/Microsoft Office//**)",
+      "Read(//c/Program Files/**)",
+      "Bash(choco --version)",
+      "Bash(choco install *)",
+      "Read(//d/PROJ/NEW-PORT/award-presentation/**)",
+      "Bash(break)",
+      "Bash(tasklist)",
+      "PowerShell($src = \"D:\\\\PROJ\\\\NEW-PORT\\\\award-presentation\\\\Mallawapitiya_Award_2026.pptx\"; $dst = \"D:\\\\PROJ\\\\NEW-PORT\\\\award-presentation\\\\Mallawapitiya_Award_2026.pdf\"; $ppt = New-Object -ComObject PowerPoint.Application; $deck = $ppt.Presentations.Open\\($src, $true, $false, $false\\); $deck.ExportAsFixedFormat\\($dst, 2, 2\\); $deck.Close\\(\\); $ppt.Quit\\(\\); Write-Output \"PDF created: $\\(\\(Get-Item $dst\\).Length / 1MB\\) MB\")",
+      "PowerShell($src = \"D:\\\\PROJ\\\\NEW-PORT\\\\award-presentation\\\\Mallawapitiya_Award_2026.pptx\"; $dst = \"D:\\\\PROJ\\\\NEW-PORT\\\\award-presentation\\\\Mallawapitiya_Award_2026.pdf\"; $ppt = New-Object -ComObject PowerPoint.Application; $deck = $ppt.Presentations.Open\\($src, $true, $false, $false\\); $deck.SaveAs\\($dst, 32\\); $deck.Close\\(\\); $ppt.Quit\\(\\); if \\(Test-Path $dst\\) { Write-Output \\(\"PDF size: \" + \\([math]::Round\\(\\(Get-Item $dst\\).Length / 1MB, 1\\)\\) + \" MB\"\\) } else { Write-Output \"PDF NOT created\" })",
+      "Bash(which pdftoppm *)",
+      "Bash(python -m pip install pdf2image PyMuPDF)",
+      "Bash(python pdf_to_imgs.py)",
+      "PowerShell(Remove-Item -Force \"D:\\\\PROJ\\\\NEW-PORT\\\\award-presentation\\\\Mallawapitiya_Award_2026.pdf\" -ErrorAction SilentlyContinue; $src = \"D:\\\\PROJ\\\\NEW-PORT\\\\award-presentation\\\\Mallawapitiya_Award_2026.pptx\"; $dst = \"D:\\\\PROJ\\\\NEW-PORT\\\\award-presentation\\\\Mallawapitiya_Award_2026.pdf\"; $ppt = New-Object -ComObject PowerPoint.Application; $deck = $ppt.Presentations.Open\\($src, $true, $false, $false\\); $deck.SaveAs\\($dst, 32\\); $deck.Close\\(\\); $ppt.Quit\\(\\); if \\(Test-Path $dst\\) { Write-Output \\(\"PDF size: \" + \\([math]::Round\\(\\(Get-Item $dst\\).Length / 1MB, 1\\)\\) + \" MB\"\\) } else { Write-Output \"PDF NOT created\" })"
     ]
-  }
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ ! -f \"${CLAUDE_PROJECT_DIR}/.claude/skills/impeccable/scripts/hook.mjs\" ] || node \"${CLAUDE_PROJECT_DIR}/.claude/skills/impeccable/scripts/hook.mjs\"",
+            "timeout": 5,
+            "statusMessage": "Checking UI changes"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ ! -f \"${CLAUDE_PROJECT_DIR}/.claude/skills/impeccable/scripts/hook.mjs\" ] || node \"${CLAUDE_PROJECT_DIR}/.claude/skills/impeccable/scripts/hook.mjs\"",
+            "timeout": 30,
+            "statusMessage": "Design deep pass"
+          }
+        ]
+      }
+    ]
+  },
+  "description": "Impeccable design detector: immediate-tier checks after Edit/Write/MultiEdit on UI files, full-rule deep pass on Stop."
 }

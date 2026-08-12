@@ -9,7 +9,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/writeups`, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/cheatsheets`, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/about`, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${SITE_URL}/contact`, changeFrequency: "yearly", priority: 0.4 },
   ];
 
   const projectRoutes: MetadataRoute.Sitemap = getAllProjects().map((p) => ({

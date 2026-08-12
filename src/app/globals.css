@@ -32,7 +32,6 @@
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-signal: var(--signal);
-  --color-signal-dim: var(--signal-dim);
   --color-warn: var(--warn);
   --color-info: var(--info);
 
@@ -47,33 +46,34 @@
   --radius: 0.5rem;
 
   /* Pure dark canvas */
-  --background: #0a0a0a;
+  --background: #121212;
   --foreground: oklch(0.95 0.005 180);
-  --surface: #111111;
-  --surface-2: #161616;
+  --surface: #191919;
+  --surface-2: #1f1f1f;
 
-  --card: #0f0f0f;
+  --card: #171717;
   --card-foreground: oklch(0.95 0.005 180);
-  --popover: #111111;
+  --popover: #191919;
   --popover-foreground: oklch(0.95 0.005 180);
 
   /* Electric green accent — used sparingly */
   --signal: oklch(0.88 0.22 155);            /* ~ #00ff9c */
-  --signal-dim: oklch(0.55 0.14 155);
   --warn: oklch(0.78 0.17 75);
   --info: oklch(0.78 0.13 220);
 
   --primary: var(--signal);
   --primary-foreground: #000000;
-  --secondary: #1a1a1a;
+  --secondary: #232323;
   --secondary-foreground: oklch(0.95 0.005 180);
-  --muted: #141414;
+  --muted: #1c1c1c;
   /* 0.68 lightness → ~6.8:1 on the canvas (comfortably above WCAG AA 4.5:1,
      where 0.62 sat at a tighter 5.45:1). */
   --muted-foreground: oklch(0.68 0.01 180);
   --accent: var(--signal);
   --accent-foreground: #000000;
-  --destructive: oklch(0.62 0.22 25);
+  /* 0.66, not 0.62: raising the ground to #121212 dropped the old value to
+     4.33:1 on --surface, under AA. This restores 5.09:1. */
+  --destructive: oklch(0.66 0.22 25);
   --destructive-foreground: oklch(0.98 0 0);
 
   --border: oklch(1 0 0 / 0.08);
@@ -100,6 +100,15 @@
   html { scroll-behavior: smooth; }
 }
 
+/* Hydration failsafe (see app/layout.tsx). Framer Motion's SSR output leaves
+   content at opacity:0 until the client bundle takes over; if that never
+   happens the page would stay blank. Unlayered + !important so it outranks the
+   inline styles motion writes into the markup. */
+.js-failed [style*="opacity:0"] {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
 @layer base {
   * { border-color: var(--color-border); }
   html { color-scheme: dark; -webkit-tap-highlight-color: transparent; }
@@ -120,21 +129,12 @@
 
   /* Subtle scrollbar */
   ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-track { background: #0a0a0a; }
-  ::-webkit-scrollbar-thumb { background: #1f1f1f; border-radius: 8px; }
-  ::-webkit-scrollbar-thumb:hover { background: #2a2a2a; }
+  ::-webkit-scrollbar-track { background: #121212; }
+  ::-webkit-scrollbar-thumb { background: #272727; border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: #333333; }
 }
 
 /* ---------- Utilities ---------- */
-
-@utility grid-bg {
-  background-image:
-    linear-gradient(to right, color-mix(in oklab, var(--signal) 6%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in oklab, var(--signal) 6%, transparent) 1px, transparent 1px);
-  background-size: 56px 56px;
-  background-position: -1px -1px;
-  mask-image: radial-gradient(ellipse at 50% 0%, #000 30%, transparent 75%);
-}
 
 @utility scanlines {
   position: relative;
@@ -150,11 +150,6 @@
     );
     pointer-events: none;
   }
-}
-
-@utility signal-text {
-  color: var(--signal);
-  text-shadow: 0 0 18px color-mix(in oklab, var(--signal) 45%, transparent);
 }
 
 @utility signal-border {
@@ -186,20 +181,7 @@
   font-size: 11px;
   letter-spacing: .02em;
   color: oklch(0.78 0.01 180);
-  background: #0f0f0f;
-}
-
-@utility kbd {
-  display: inline-flex;
-  align-items: center;
-  padding: .1rem .4rem;
-  border: 1px solid var(--border);
-  border-bottom-width: 2px;
-  border-radius: .3rem;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  background: #0f0f0f;
-  color: oklch(0.85 0.01 180);
+  background: #171717;
 }
 
 @utility caret {
@@ -218,17 +200,421 @@
   50%, 100% { opacity: 0; }
 }
 
-@keyframes float-soft {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-}
-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* ---------- Display system ----------
+   The site's art direction rests on one move: extreme scale contrast inside a
+   single monospace voice. Names and section titles run enormous and tight;
+   everything supporting them runs tiny, tracked-out, and uppercase. The gap
+   between those two registers is the design. */
+
+@utility display {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: -0.055em;
+  line-height: 0.82;
+  text-transform: uppercase;
+}
+
+/* The hero name. Fluid from a phone to an ultrawide without a breakpoint. */
+@utility display-hero {
+  font-size: clamp(3.1rem, 14.5vw, 15rem);
+}
+
+/* Section titles: still huge, one step under the name. */
+@utility display-section {
+  font-size: clamp(2.1rem, 7.5vw, 5.5rem);
+}
+
+/* Band scale — for full-bleed marquee type only. Deliberately larger than the
+   hero: the band is meant to run off both edges and never be read whole. */
+@utility display-band {
+  font-size: clamp(3.5rem, 17vw, 17rem);
+}
+
+/* The small register. Every label, index, and meta line on the site. */
+@utility label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+/* Outlined type — the hollow counterpart to the solid display line.
+   The stroke is em-based so it stays proportional across the hero's fluid
+   range: a fixed 1px read as a hairline against 240px lettering and all but
+   disappeared. A faint fill gives the letterform a body, so it reads as type
+   rather than as a wire edge, and paint-order keeps the stroke outside the
+   glyph instead of eating half its weight inward. */
+@utility display-outline {
+  color: color-mix(in oklab, var(--signal) 12%, transparent);
+  -webkit-text-stroke-color: color-mix(in oklab, var(--signal) 95%, transparent);
+  /* max() floors the stroke at a hairline: 0.016em alone thins to 0.79px on a
+     360px phone, finer than the value it replaced. */
+  -webkit-text-stroke-width: max(1.2px, 0.016em);
+  paint-order: stroke fill;
+}
+
+/* Vertical rhythm for the long scroll. */
+@utility band {
+  padding-block: clamp(5rem, 13vw, 11rem);
+}
+
+/* Project rows: full-bleed lines that light as the cursor crosses them. */
+.row-link {
+  position: relative;
+  display: block;
+  border-top: 1px solid var(--border);
+  transition: background-color 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.row-link:last-of-type { border-bottom: 1px solid var(--border); }
+.row-link::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--signal) 9%, transparent),
+    transparent 62%
+  );
+  opacity: 0;
+  transition: opacity 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
+  pointer-events: none;
+}
+.row-link:hover::before,
+.row-link:focus-visible::before { opacity: 1; }
+
+/* A scan line that wipes across the row on hover — the domain's own gesture. */
+.row-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  height: 1px;
+  width: 100%;
+  background: var(--signal);
+  box-shadow: 0 0 12px var(--signal);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.row-link:hover::after,
+.row-link:focus-visible::after { transform: scaleX(1); }
+
+.row-title {
+  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1), color 0.3s;
+}
+.row-link:hover .row-title,
+.row-link:focus-visible .row-title {
+  transform: translateX(clamp(0.5rem, 1.6vw, 1.6rem));
+  color: var(--signal);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row-link::after { transition: none; }
+  .row-title { transition: none; }
+  .row-link:hover .row-title { transform: none; }
+}
+
+/* Scroll-scrubbed marquee: a band of repeated type that travels horizontally in
+   lockstep with its section's passage through the viewport — the scroll drives
+   the position, not a clock.
+
+   The travel itself is driven by GSAP ScrollTrigger (see scroll-choreography),
+   not by `animation-timeline: view()`. Two reasons the CSS route failed here:
+   the heading's `overflow: hidden` mask makes it a scroll container, and
+   `view()` resolves against the *nearest* one — an <h2> that never scrolls, so
+   the timeline sat inert. Scroll-driven CSS also isn't in Safari or Firefox
+   yet, and GSAP is already in this page's bundle, so the JS route costs nothing
+   extra and works everywhere.
+
+   Only the first repeat is real text; the rest are aria-hidden, so the heading
+   is announced once. Reduced motion leaves the band static and legible. */
+/* The band is full-bleed and clips at the viewport, so the type is cut off at
+   both edges through the whole sweep rather than starting and ending inside a
+   container. */
+.scrub-marquee {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+}
+
+.scrub-marquee-track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  will-change: transform;
+}
+
+.scrub-marquee-item {
+  white-space: nowrap;
+  padding-inline-end: 0.28em;
+}
+
+/* Marquee: the toolchain, running as a continuous band. */
+.marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 44s linear infinite;
+}
+.marquee:hover { animation-play-state: paused; }
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee { animation: none; }
+}
+
+/* The CV command block — the site's conversion element.
+   The command reads as the loud thing: an oversized prompt glyph and the
+   command itself at ~1rem, with the download and copy actions demoted to a
+   footer row beneath a hairline. Signal-tinted panel, soft outward glow. */
+.cta-cv {
+  display: grid;
+  gap: 0.8rem;
+  font-family: var(--font-mono);
+  padding: 1.15rem 1.25rem;
+  border: 1px solid color-mix(in oklab, var(--signal) 38%, transparent);
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--signal) 7%, transparent);
+  box-shadow: var(--glow-signal-soft);
+  backdrop-filter: blur(4px);
+  transition: border-color 0.5s, box-shadow 0.5s;
+}
+.cta-cv:hover {
+  border-color: color-mix(in oklab, var(--signal) 70%, transparent);
+  box-shadow: 0 0 44px -6px var(--signal);
+}
+
+.cta-cv-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+  min-width: 0;
+  text-decoration: none;
+}
+
+.cta-cv-prompt {
+  color: var(--signal);
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.cta-cv-cmd {
+  font-size: 1.02rem;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+  min-width: 0;
+  word-break: break-all;
+}
+
+.cta-cv-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.7rem;
+}
+
+.cta-cv-dl {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--signal);
+}
+
+.cta-cv-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--muted-foreground);
+  transition: color 0.3s, border-color 0.3s;
+}
+.cta-cv-copy:hover {
+  color: var(--signal);
+  border-color: color-mix(in oklab, var(--signal) 50%, transparent);
+}
+
+/* Dotted rule — a 2px dot every 7px, drawn as a gradient rather than a
+   `border-style: dotted` so the dot size and gap are exact instead of whatever
+   the engine picks. Used as a standalone divider (flex-1 beside a label) and as
+   the separator between record rows. */
+@utility dotted-rule {
+  height: 1px;
+  background-image: repeating-linear-gradient(
+    to right,
+    color-mix(in oklab, var(--muted-foreground) 62%, transparent) 0 2px,
+    transparent 2px 7px
+  );
+}
+
+/* Form fields carry the same dotted rule as the record rows, drawn as a
+   background so it sits under the text without a border box. */
+.field-dotted {
+  background-image: repeating-linear-gradient(
+    to right,
+    color-mix(in oklab, var(--muted-foreground) 62%, transparent) 0 2px,
+    transparent 2px 7px
+  );
+  background-repeat: no-repeat;
+  background-position: left bottom;
+  background-size: 100% 1px;
+  transition: background-image 0.25s;
+}
+.field-dotted:focus {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--signal) 0 2px,
+    transparent 2px 7px
+  );
+}
+.field-dotted--error {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--destructive) 0 2px,
+    transparent 2px 7px
+  );
+}
+
+/* ---------- About: résumé rows ---------- */
+
+.about-row {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-block: 1.15rem;
+}
+
+.about-row::before,
+.about-group .about-row:last-child::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  height: 1px;
+  background-image: repeating-linear-gradient(
+    to right,
+    color-mix(in oklab, var(--muted-foreground) 62%, transparent) 0 2px,
+    transparent 2px 7px
+  );
+}
+.about-row::before { top: 0; }
+.about-group .about-row:last-child::after { bottom: 0; }
+
+/* The group's label already carries a rule of its own, so the first row must
+   not draw a second one directly beneath it — that read as a double line. */
+.about-group .about-row:first-child::before { content: none; }
+
+.about-role {
+  font-style: italic;
+  color: var(--muted-foreground);
+}
+
+/* Portrait slot. Duotone by construction: the image renders in luminosity over
+   a signal-tinted ground, so a plain photograph adopts the site's one accent
+   instead of introducing a second colour world. Dormant until a portrait
+   exists — see PORTRAIT in app/page.tsx. */
+.portrait {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.4rem;
+  background: color-mix(in oklab, var(--signal) 62%, #121212);
+}
+.portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(1) contrast(1.12);
+  mix-blend-mode: luminosity;
+}
+
+/* ---------- Hero lettering ----------
+   Each letter is its own hover target. This only works cleanly because the
+   face is MONOSPACED: every weight shares an advance width, so bolding a
+   letter shifts nothing around it — no reflow, no jitter in its neighbours.
+   Weight animates on the variable font's wght axis rather than swapping
+   between static cuts. */
+/* Weight is the only thing that moves — colour is fixed per line. The two
+   lines run opposite: the light line thickens under the cursor, the bold line
+   thins, so hovering either one is the same gesture read in reverse. */
+.hero-letter {
+  display: inline-block;
+  transition: font-variation-settings 0.32s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* Janith — normal, white. Hovering thickens it; it stays white. */
+.hero-letter--light {
+  font-variation-settings: "wght" 400;
+  color: var(--foreground);
+}
+.hero-letter--light:hover {
+  font-variation-settings: "wght" 800;
+}
+
+/* Godage — bold. Hovering thins it back to normal. */
+.hero-letter--solid {
+  font-variation-settings: "wght" 800;
+  color: var(--signal);
+}
+.hero-letter--solid:hover {
+  font-variation-settings: "wght" 400;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-letter { transition: none; }
+}
+
+/* Portrait bled into the hero's right side — masked out toward the type so it
+   never competes with the name for the first read. */
+.hero-portrait {
+  position: absolute;
+  inset-block: 0;
+  right: 0;
+  z-index: 1;
+  width: min(58%, 940px);
+  pointer-events: none;
+  mask-image:
+    linear-gradient(to right, transparent 0%, #000 55%),
+    linear-gradient(to bottom, #000 68%, transparent 98%);
+  mask-composite: intersect;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0%, #000 55%),
+    linear-gradient(to bottom, #000 68%, transparent 98%);
+  -webkit-mask-composite: source-in;
+}
+.hero-portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 20%;
+  filter: grayscale(1) contrast(1.15);
+  mix-blend-mode: luminosity;
+  opacity: 0.55;
+}
+
+/* Hero vignette, so the lettering always sits on enough ground to read. */
+.hero-veil {
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 45%, transparent 15%, var(--background) 88%),
+    linear-gradient(180deg, transparent 55%, var(--background) 97%);
 }
 
 /* ---------- MDX prose ---------- */
@@ -291,7 +677,7 @@
   padding: 0.12rem 0.4rem;
   border: 1px solid var(--border);
   border-radius: 0.3rem;
-  background: #0f0f0f;
+  background: #171717;
   color: oklch(0.85 0.01 180);
 }
 

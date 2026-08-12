@@ -25,18 +25,20 @@ export interface Cert {
 
 export const certs: Cert[] = [
   {
-  name: "Certified Cybersecurity Foundations",
-  provider: "Hackviser",
-  progress: 100,
-  status: "Complete",
-  credentialUrl: "https://hackviser.com/verify?id=HV-CORE-L1RRIFZQ",
-},
+    name: "Certified Cybersecurity Foundations",
+    provider: "Hackviser",
+    progress: 100,
+    status: "Complete",
+    credentialUrl: "https://hackviser.com/verify?id=HV-CORE-L1RRIFZQ",
+  },
   {
-  name: "AWS Security Fundamentals",
-  provider: "Amazon Web Services (AWS)",
-  progress: 100,
-  status: "Complete",
-  credentialUrl: "",
+    // No public verification link for this one — the field is omitted rather
+    // than set to "", so the UI simply renders no Verify affordance instead of
+    // an empty link. Add the URL here if one becomes available.
+    name: "AWS Security Fundamentals",
+    provider: "Amazon Web Services (AWS)",
+    progress: 100,
+    status: "Complete",
   },
   {
     name: "AWS Educate Introduction to Cloud 101",
@@ -58,5 +60,5 @@ export const certs: Cert[] = [
     progress: 100,
     status: "Complete",
     credentialUrl: "https://learn.opswatacademy.com/certificate/U6ckeSIWaw",
-  }
+  },
 ];

@@ -18,7 +18,6 @@ export function ProjectsView({ projects }: { projects: ProjectMeta[] }) {
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
       <SectionHeading
-        eyebrow="ls ~/projects"
         title="Everything I've shipped."
         description="Filter by domain. Each card opens a longer-form writeup of the problem, approach, and outcome."
       />
@@ -30,7 +29,8 @@ export function ProjectsView({ projects }: { projects: ProjectMeta[] }) {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`mono rounded-md border px-3 py-1.5 text-[11px] uppercase tracking-wider transition-all ${
+              aria-pressed={active}
+              className={`mono inline-flex min-h-8 items-center rounded-md border px-3 py-1.5 text-[11px] uppercase tracking-wider transition-all ${
                 active
                   ? "border-[color:var(--signal)]/60 bg-[color:var(--signal)]/10 text-[color:var(--signal)] shadow-[0_0_18px_-6px_var(--signal)]"
                   : "border-border bg-[color:var(--surface)] text-muted-foreground hover:border-[color:var(--signal)]/40 hover:text-foreground"
@@ -60,6 +60,12 @@ export function ProjectsView({ projects }: { projects: ProjectMeta[] }) {
       {filtered.length === 0 && (
         <div className="mono mt-10 rounded-md border border-dashed border-border bg-[color:var(--surface)] p-8 text-center text-sm text-muted-foreground">
           <span className="text-[color:var(--signal)]">$</span> grep -r &quot;{filter}&quot; ./projects → no matches
+          <button
+            onClick={() => setFilter("All")}
+            className="mt-4 block w-full text-[11px] uppercase tracking-wider text-[color:var(--signal)] hover:underline"
+          >
+            clear filter
+          </button>
         </div>
       )}
     </div>

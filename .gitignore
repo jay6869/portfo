@@ -35,3 +35,11 @@ next-env.d.ts
 
 # Env
 .env*.local
+
+# Design tooling — not part of the site. The skill is 3.3MB of vendored tool
+# code, and the live-mode files are machine-specific runtime state.
+.claude/skills/
+.impeccable/live/sessions/
+.impeccable/live/accept-receipts/
+.impeccable/live/roots.json
+.impeccable/hook.cache.json

@@ -1,27 +1,41 @@
 import { Reveal } from "./motion-primitives";
 import type { ReactNode } from "react";
 
+/**
+ * The section head used by every interior route.
+ *
+ * Set in the same display system as the home surface — `.display-section` over
+ * a short supporting line — so the site reads as one world rather than as a
+ * redesigned homepage bolted to older pages.
+ *
+ * There is deliberately no eyebrow/kicker slot. A label stacked above a heading
+ * is the one layout pattern the craft floor bans outright; the heading carries
+ * its own weight.
+ */
 export function SectionHeading({
-  eyebrow,
   title,
   description,
   align = "left",
+  as: Tag = "h1",
   children,
 }: {
-  eyebrow: string;
   title: ReactNode;
   description?: string;
   align?: "left" | "center";
+  /** h1 for the page's own title; h2 for a later section on the same page. */
+  as?: "h1" | "h2";
   children?: ReactNode;
 }) {
   return (
     <Reveal>
-      <div className={`mb-10 flex flex-col gap-3 ${align === "center" ? "items-center text-center" : ""}`}>
-        <div className="mono flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-[color:var(--signal)]/80">
-          <span className="h-px w-6 bg-[color:var(--signal)]/40" />
-          {eyebrow}
-        </div>
-        <h2 className="text-balance text-3xl font-semibold sm:text-4xl">{title}</h2>
+      <div
+        className={`mb-12 flex flex-col gap-5 ${
+          align === "center" ? "items-center text-center" : ""
+        }`}
+      >
+        <Tag className="display display-section text-balance text-foreground">
+          {title}
+        </Tag>
         {description && (
           <p className="max-w-2xl text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base">
             {description}
