@@ -18,26 +18,34 @@ import { ScrollChoreography } from "@/components/scroll-choreography";
 import { MarqueeBand } from "@/components/marquee-band";
 import { ContactForm } from "@/components/contact-form";
 import { TextGlitch } from "@/components/ui/text-glitch-effect";
+import { AboutMedia } from "@/components/about-media";
 import { skillGroups, certs } from "@/lib/data";
 import { getAllProjects, getAllWriteups } from "@/lib/posts";
 
 /**
- * Decorative visual for the About band.
+ * Decorative media for the About band.
  *
- * Save the artwork into /public as `about-visual.jpg` (or .png / .webp) and it
- * appears automatically. Resolved against the filesystem at build time rather
- * than hardcoded, so a missing file renders nothing instead of a broken image
- * — an empty frame waiting on an asset reads as an abandoned site, and the
- * column is composed to stand without one.
+ * Drop a file into /public named `about-visual.*` — video (mp4/webm) or image
+ * (jpg/png/webp/avif/gif) — and it appears automatically. Resolved against the
+ * filesystem at build time rather than hardcoded, so a missing file renders
+ * nothing instead of a broken frame; the column is composed to stand alone.
  *
- * Deliberately NOT treated as a portrait: it is artwork, not a photograph of
- * the person, so it carries an empty alt and no location caption. PRODUCT.md
- * records that no photograph exists; captioning art as if it were one would be
- * the sort of small dishonesty this site's whole argument rests on avoiding.
+ * Treated as decoration, not a portrait: empty alt, no location caption. It is
+ * currently a flower clip, and captioning it as if it depicted the person
+ * would be exactly the small dishonesty this site's argument rests on avoiding.
+ * Video is rendered raw, with no filter or duotone.
  */
-const ABOUT_IMAGE = ["about-visual.jpg", "about-visual.png", "about-visual.webp"]
-  .map((f) => ({ f, abs: path.join(process.cwd(), "public", f) }))
-  .find(({ abs }) => fs.existsSync(abs));
+const ABOUT_MEDIA = (() => {
+  try {
+    const file = fs
+      .readdirSync(path.join(process.cwd(), "public"))
+      .find((f) => /^about-visual\.(mp4|webm|jpe?g|png|webp|avif|gif)$/i.test(f));
+    if (!file) return undefined;
+    return { file, video: /\.(mp4|webm)$/i.test(file) };
+  } catch {
+    return undefined;
+  }
+})();
 
 /** One icon per skill group, in the order they are declared in lib/data.
  *  Kept positional rather than keyed by name so adding a group cannot leave a
@@ -359,18 +367,22 @@ export default function Home() {
         <MarqueeBand text="About me" className="mb-14" />
 
         <div className="mx-auto max-w-[1600px] px-5 sm:px-8">
-          <div className="grid gap-14 md:grid-cols-2 md:gap-20">
+          <div className="grid gap-14 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:gap-20">
             {/* Left — the visual when one is present, then the standing facts. */}
             <div data-reveal>
-              {ABOUT_IMAGE && (
-                <div
-                  className="about-visual mb-9 aspect-[9/16] w-full max-w-sm"
-                  aria-hidden
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={`/${ABOUT_IMAGE.f}`} alt="" loading="lazy" decoding="async" />
-                </div>
-              )}
+              {ABOUT_MEDIA &&
+                (ABOUT_MEDIA.video ? (
+                  /* Source is 720x900 — already 4:5, so the frame crops
+                     nothing. Rendered raw, no treatment. */
+                  <div className="mb-9">
+                    <AboutMedia src={`/${ABOUT_MEDIA.file}`} />
+                  </div>
+                ) : (
+                  <div className="about-visual mb-9 aspect-[4/5] w-full max-w-sm" aria-hidden>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={`/${ABOUT_MEDIA.file}`} alt="" loading="lazy" decoding="async" />
+                  </div>
+                ))}
 
               <p className="text-pretty text-[clamp(1.05rem,2vw,1.5rem)] italic leading-snug text-foreground/90">
                 Third-year cybersecurity undergraduate who ships the whole loop —
@@ -413,21 +425,31 @@ export default function Home() {
               <LabelRule className="mb-1 mt-12">Focus</LabelRule>
               <div className="about-group">
                 {[
-                {
-                  name: "Offensive",
-                  role: "Web exploitation, network attack paths, and the tooling that automates both",
-                  tag: "[red]",
-                },
-                {
-                  name: "Detection",
-                  role: "Sigma rules, Suricata signatures, and Wazuh pipelines",
-                  tag: "[blue]",
-                },
-                {
-                  name: "Labs",
-                  role: "PortSwigger Academy, HackTheBox, and CTF play",
-                  tag: "[ongoing]",
-                },
+                  {
+                    name: "Offensive",
+                    role: "Web exploitation, network attack paths, and the tooling that automates the boring half of both",
+                    tag: "[red]",
+                  },
+                  {
+                    name: "Detection",
+                    role: "Sigma rules, Suricata signatures, and Wazuh pipelines — written against attacks I ran myself",
+                    tag: "[blue]",
+                  },
+                  {
+                    name: "Tooling",
+                    role: "Python and TypeScript utilities that take the repetitive part of an engagement off the table",
+                    tag: "[build]",
+                  },
+                  {
+                    name: "Labs",
+                    role: "PortSwigger Academy, HackTheBox, and CTF play — the reps behind everything above",
+                    tag: "[ongoing]",
+                  },
+                  {
+                    name: "Research",
+                    role: "Wi-Fi beamforming feedback and the embedded side. Early days; the writeups are where it shows",
+                    tag: "[open]",
+                  },
                 ].map((f) => (
                   <div key={f.name} data-reveal-item className="about-row">
                     <div className="min-w-0">

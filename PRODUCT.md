@@ -119,6 +119,9 @@ can be read and judged directly.
 - Two verifiable credentials with public URLs: OPSWAT Academy "Introduction to CIP"
   (`learn.opswatacademy.com`) and AWS Educate "Introduction to Cloud 101" (Credly badge).
 - A CV PDF at `public/janith-godage-cv.pdf` — the defined conversion asset.
+- A decorative video at `public/about-visual.mp4` (720x900, 10s, silent) in the About band,
+  rendered raw with no treatment. It is a flower clip, not a depiction of Janith, so it carries
+  no alt text and no caption.
 - Substantive original long-form writing: 5 technical writeups and 3 cheat sheets in `/content`,
   plus detailed problem/approach/outcome records for 3 projects.
 
@@ -127,7 +130,6 @@ can be read and judged directly.
 - **No project screenshots, demo recordings, or UI captures exist.** The project detail template
   currently renders empty placeholder boxes labelled "screenshot · 1" and "screenshot · 2"; these
   are stand-ins for assets that do not exist and must not be presented as real.
-- **No photograph of the person exists**, and none is available for use.
 - No testimonials, references, employers, client work, or press.
 - No usage metrics, download counts, stars, benchmarks, or performance figures have been
   established. Numbers must come from a real source or not appear.
