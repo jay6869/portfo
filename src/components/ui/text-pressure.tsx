@@ -34,9 +34,9 @@ type Variant = "light" | "solid";
 // Resting and peak positions on each axis, per line.
 const AXES: Record<Variant, { wght: [number, number]; wdth: [number, number] }> = {
   // Normal at rest, ultra-bold under the cursor.
-  light: { wght: [300, 900], wdth: [100, 108] },
+  light: { wght: [300, 900], wdth: [116, 122] },
   // Ultra-bold at rest, normal under the cursor — the inverse gesture.
-  solid: { wght: [900, 300], wdth: [106, 100] },
+  solid: { wght: [900, 300], wdth: [120, 114] },
 };
 
 // Width moves only a few units. Weight is what the eye reads as pressure;

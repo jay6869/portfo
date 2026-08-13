@@ -71,8 +71,12 @@ function SectionMeta({
   );
 }
 
-/** A label with the same dotted rule running out to the right — the record
- *  sheet's own sub-heading. */
+/** A sub-heading with its rule underneath rather than beside it.
+ *
+ *  Running the rule inline next to a short label makes its length depend on the
+ *  label's rendered width, so it re-flows at every breakpoint and drifts out of
+ *  alignment with the rows below. Stacking it keeps the rule full-width and
+ *  locked to the same edges as the record rows at any size. */
 function LabelRule({
   children,
   className = "",
@@ -81,9 +85,9 @@ function LabelRule({
   className?: string;
 }) {
   return (
-    <div className={`flex items-center gap-4 ${className}`}>
-      <span className="label shrink-0 text-[color:var(--signal)]/70">{children}</span>
-      <span className="dotted-rule min-w-6 flex-1" aria-hidden />
+    <div className={className}>
+      <span className="label block text-[color:var(--signal)]/70">{children}</span>
+      <span className="dotted-rule mt-2.5 block w-full" aria-hidden />
     </div>
   );
 }

@@ -38,8 +38,10 @@
   /* Wired to next/font variables (set in app/layout.tsx). Fallbacks preserve
      the original stack if the font vars are ever absent. */
   --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display-sans), ui-sans-serif, system-ui, sans-serif;
+  /* Body copy is monospace too — the terminal voice is the brand, and a
+     proportional sans in running text read as a different site. */
+  --font-sans: var(--font-jetbrains-mono), ui-monospace, monospace;
 }
 
 :root {
@@ -116,7 +118,7 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: var(--font-sans);
+    font-family: var(--font-mono);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
@@ -125,6 +127,7 @@
     color: #fff;
   }
   h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; }
+  em, i { font-style: italic; }
   code, kbd, pre, .mono { font-family: var(--font-mono); }
 
   /* Subtle scrollbar */
@@ -214,11 +217,16 @@
    everything supporting them runs tiny, tracked-out, and uppercase. The gap
    between those two registers is the design. */
 
+/* Headings and marquees run in the extended display face. The width axis is
+   pushed toward the top of its range so the type is genuinely wide by design
+   rather than scaled sideways. */
 @utility display {
-  font-family: var(--font-mono);
-  font-weight: 700;
-  letter-spacing: -0.055em;
-  line-height: 0.82;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-variation-settings: "wdth" 112;
+  font-stretch: 112%;
+  letter-spacing: -0.035em;
+  line-height: 0.86;
   text-transform: uppercase;
 }
 
@@ -227,7 +235,7 @@
    the width axis back at natural proportions the type can run considerably
    larger than it could when it was being stretched. */
 @utility display-hero {
-  font-size: clamp(2.9rem, 13.5vw, 16rem);
+  font-size: clamp(2.5rem, 10.5vw, 12.5rem);
 }
 
 /* Section titles: still huge, one step under the name. */
@@ -741,7 +749,7 @@
    pointer, or under reduced motion. */
 .pressure {
   display: flex;
-  font-family: var(--font-pressure), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-display);
   text-transform: uppercase;
   letter-spacing: -0.035em;
   line-height: 0.84;
@@ -756,11 +764,11 @@
    driving the wdth axis to 142 literally scales the glyphs sideways, which is
    what read as stretched. The axis still moves, but only enough to feel alive. */
 .pressure--light > span {
-  font-variation-settings: "wght" 300, "wdth" 100;
+  font-variation-settings: "wght" 300, "wdth" 116;
   color: var(--foreground);
 }
 .pressure--solid > span {
-  font-variation-settings: "wght" 900, "wdth" 106;
+  font-variation-settings: "wght" 900, "wdth" 120;
   color: var(--signal);
 }
 

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Space_Grotesk, JetBrains_Mono, Anybody } from "next/font/google";
+import { JetBrains_Mono, Archivo } from "next/font/google";
 import "./globals.css";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
@@ -8,41 +8,20 @@ import { Providers } from "@/components/providers";
 import { Hud } from "@/components/hud";
 import { SITE, SITE_URL } from "@/lib/site";
 
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  variable: "--font-space-grotesk",
-  display: "swap",
-});
-
-// Hero display face. Loaded through next/font rather than the @import the
-// source component uses: that fetches from fonts.googleapis.com inside a
-// <style> tag, which this project's `style-src 'self'` CSP blocks outright —
-// the text would silently fall back and the variable axes would do nothing.
-// next/font self-hosts, so no CSP change is needed.
-//
-// Both wght and wdth are requested: the pressure effect drives the width axis
-// as well as weight, which is what makes letters visibly stretch rather than
-// just thicken.
-const anybody = Anybody({
+// Display face: Archivo, requested with its width axis so headings can run
+// genuinely extended rather than being scaled sideways. wght 100-900 gives the
+// hero its light/black contrast, and wdth 62-125 the extended setting used for
+// every marquee and heading.
+const archivo = Archivo({
   subsets: ["latin"],
   axes: ["wdth"],
-  variable: "--font-pressure",
+  variable: "--font-display-sans",
   display: "swap",
 });
 
-// No `weight` array: that loads the VARIABLE font (wght 100–800) as a single
-// file. Two reasons it matters here — the display type asks for 700, which the
-// old static set (400/500/600) never loaded and browsers were faking as
-// synthetic bold; and per-letter weight can only be animated continuously
-// against a variable axis.
+// Body and UI voice. No `weight` array loads the VARIABLE font as one file,
+// which the display type needs anyway — it asks for 700, and the old static
+// set never loaded it, so browsers were faking synthetic bold.
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-jetbrains-mono",
@@ -91,9 +70,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
+    // suppressHydrationWarning is required, not cosmetic: the accent script
+    // below writes style="--signal:…" onto this element before React hydrates,
+    // so the server markup and the live DOM legitimately differ. The flag
+    // applies one level deep — it silences this element's own attributes and
+    // nothing within it.
     <html
       lang="en"
-      className={`dark ${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} ${anybody.variable}`}
+      suppressHydrationWarning
+      className={`dark ${jetbrainsMono.variable} ${archivo.variable}`}
     >
       <body>
         {/* Direction contract, emitted as a real HTML comment so it survives the
