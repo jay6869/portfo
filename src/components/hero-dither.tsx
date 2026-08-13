@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { THEME_EVENT } from "@/lib/theme";
 
 /**
  * Ordered-dither wave field behind the hero.
@@ -213,8 +214,19 @@ export function HeroDither() {
 
     // Brightest band stops short of full signal — at full strength the field
     // competes with the name for the first read.
-    gl.uniform3f(uWave, wave[0] * WAVE_INTENSITY, wave[1] * WAVE_INTENSITY, wave[2] * WAVE_INTENSITY);
+    const pushWave = (rgb: [number, number, number]) => {
+      gl.uniform3f(uWave, rgb[0] * WAVE_INTENSITY, rgb[1] * WAVE_INTENSITY, rgb[2] * WAVE_INTENSITY);
+    };
+    pushWave(wave);
     gl.uniform3f(uBase, base[0], base[1], base[2]);
+
+    // The accent is read once at init, so a theme change has to say so.
+    const onAccent = (e: Event) => {
+      const hex = (e as CustomEvent<string>).detail;
+      pushWave(cssColorToRgb(hex, wave));
+      if (reduced || !running) draw(8);
+    };
+    window.addEventListener(THEME_EVENT, onAccent);
 
     const mouse = { x: -9999, y: -9999 };
     let pixel = PIXEL_DESKTOP;
@@ -304,6 +316,7 @@ export function HeroDither() {
       cancelAnimationFrame(raf);
       window.removeEventListener("pointermove", onPointer);
       window.removeEventListener("resize", onResize);
+      window.removeEventListener(THEME_EVENT, onAccent);
       document.removeEventListener("visibilitychange", onVis);
       io.disconnect();
       gl.getExtension("WEBGL_lose_context")?.loseContext();

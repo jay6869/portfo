@@ -223,8 +223,11 @@
 }
 
 /* The hero name. Fluid from a phone to an ultrawide without a breakpoint. */
+/* Sized against the heavier line, which is always the wider of the two. With
+   the width axis back at natural proportions the type can run considerably
+   larger than it could when it was being stretched. */
 @utility display-hero {
-  font-size: clamp(3.1rem, 14.5vw, 15rem);
+  font-size: clamp(2.9rem, 13.5vw, 16rem);
 }
 
 /* Section titles: still huge, one step under the name. */
@@ -725,34 +728,40 @@
    letter shifts nothing around it — no reflow, no jitter in its neighbours.
    Weight animates on the variable font's wght axis rather than swapping
    between static cuts. */
-/* Weight is the only thing that moves — colour is fixed per line. The two
-   lines run opposite: the light line thickens under the cursor, the bold line
-   thins, so hovering either one is the same gesture read in reverse. */
-.hero-letter {
+/* Hero lettering. A wide geometric variable face for the name only; every
+   label, row and meta line on the site stays monospace, so this reads as the
+   display voice rather than a change of world.
+
+   Both lines spread edge to edge with space-between. "JANITH" and "GODAGE" are
+   both six characters, so the two lines align exactly — the measure itself
+   becomes part of the composition.
+
+   Axis values are written per character by TextPressure at runtime; the values
+   here are the resting state, which is what renders with JS off, on a coarse
+   pointer, or under reduced motion. */
+.pressure {
+  display: flex;
+  font-family: var(--font-pressure), ui-sans-serif, system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: -0.035em;
+  line-height: 0.84;
+}
+.pressure > span {
   display: inline-block;
-  transition: font-variation-settings 0.32s cubic-bezier(0.2, 0.7, 0.2, 1);
+  will-change: font-variation-settings;
 }
 
-/* Janith — normal, white. Hovering thickens it; it stays white. */
-.hero-letter--light {
-  font-variation-settings: "wght" 400;
+/* Width stays near 100 on both lines. The reference sets its two lines in the
+   same face at natural proportions and lets WEIGHT alone carry the contrast;
+   driving the wdth axis to 142 literally scales the glyphs sideways, which is
+   what read as stretched. The axis still moves, but only enough to feel alive. */
+.pressure--light > span {
+  font-variation-settings: "wght" 300, "wdth" 100;
   color: var(--foreground);
 }
-.hero-letter--light:hover {
-  font-variation-settings: "wght" 800;
-}
-
-/* Godage — bold. Hovering thins it back to normal. */
-.hero-letter--solid {
-  font-variation-settings: "wght" 800;
+.pressure--solid > span {
+  font-variation-settings: "wght" 900, "wdth" 106;
   color: var(--signal);
-}
-.hero-letter--solid:hover {
-  font-variation-settings: "wght" 400;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-letter { transition: none; }
 }
 
 /* The dither buffer renders at 1/PIXEL scale; this upscales it without
@@ -887,4 +896,77 @@
   background: color-mix(in oklab, var(--signal) 18%, transparent);
   border-radius: 0.25rem;
   padding: 0.1rem 0.2rem;
+}
+
+/* ---------- Telemetry bar ----------
+   Fixed instrument strip: scroll position, cursor, the section in view, and
+   the accent switch. Deliberately quiet — it is chrome around the work, so it
+   sits at label scale and only the accent swatch carries colour. */
+.hud {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  height: 2.25rem;
+  padding-inline: 0.85rem;
+  background: color-mix(in oklab, var(--background) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.hud-side {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  min-width: 0;
+}
+.hud-side--end { justify-content: flex-end; }
+
+.hud-pair { display: inline-flex; align-items: baseline; gap: 0.5rem; }
+.hud-key { color: var(--muted-foreground); }
+.hud-val { color: var(--foreground); }
+
+.hud-center {
+  color: var(--signal);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-theme {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.4rem;
+  margin: -0.25rem -0.4rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.25s;
+}
+.hud-theme:hover { background: color-mix(in oklab, var(--foreground) 8%, transparent); }
+
+.hud-swatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--foreground) 25%, transparent);
+  transition: background-color 0.4s;
+}
+
+/* The bar floats over everything, so the page needs a floor to clear it. */
+body { padding-bottom: 2.25rem; }
+
+/* Below 640px the centre readout is the first thing to go — the two live
+   numbers and the accent control are what earn their place. */
+@media (max-width: 639px) {
+  .hud { font-size: 9px; letter-spacing: 0.12em; gap: 0.75rem; }
+  .hud-center { display: none; }
+  .hud-side { gap: 0.85rem; }
 }

@@ -19,6 +19,7 @@ import { MarqueeBand } from "@/components/marquee-band";
 import { ContactForm } from "@/components/contact-form";
 import { TextGlitch } from "@/components/ui/text-glitch-effect";
 import { AboutMedia } from "@/components/about-media";
+import { TextPressure } from "@/components/ui/text-pressure";
 import { skillGroups, certs } from "@/lib/data";
 import { getAllProjects, getAllWriteups } from "@/lib/posts";
 
@@ -51,34 +52,6 @@ const ABOUT_MEDIA = (() => {
  *  Kept positional rather than keyed by name so adding a group cannot leave a
  *  row with no icon — it wraps instead. */
 const COMPETENCY_ICONS = [Bug, Radar, ShieldCheck, Binary, Terminal] as const;
-
-/** The hero name, one hover target per letter.
- *  Pure markup and CSS — no client JS. The real string is read once by
- *  assistive tech; the split copy is decorative. */
-function SplitLetters({
-  text,
-  variant,
-}: {
-  text: string;
-  variant: "light" | "solid";
-}) {
-  return (
-    <>
-      <span className="sr-only">{text}</span>
-      <span aria-hidden="true">
-        {Array.from(text).map((ch, i) =>
-          ch === " " ? (
-            <span key={i}>&nbsp;</span>
-          ) : (
-            <span key={i} className={`hero-letter hero-letter--${variant}`}>
-              {ch}
-            </span>
-          ),
-        )}
-      </span>
-    </>
-  );
-}
 
 /** Section index and its trailing note, joined by a dotted rule. Every major
  *  band opens with one, so the numbers read as a spine down the page. */
@@ -141,6 +114,7 @@ export default function Home() {
       {/* ═══ HERO ═══ */}
       <section
         data-hero
+        data-hud="00 — INDEX"
         className="relative flex min-h-[100svh] flex-col justify-center overflow-hidden"
       >
         <HeroDither />
@@ -162,15 +136,15 @@ export default function Home() {
 
           {/* Bottom — the name, then the standing facts. */}
           <div>
-            <h1 className="display display-hero">
+            <h1 className="display-hero">
               <span className="block overflow-hidden">
                 <span data-hero-line className="block">
-                  <SplitLetters text="Janith" variant="light" />
+                  <TextPressure text="Janith" variant="light" />
                 </span>
               </span>
               <span className="block overflow-hidden">
                 <span data-hero-line className="block">
-                  <SplitLetters text="Godage" variant="solid" />
+                  <TextPressure text="Godage" variant="solid" />
                 </span>
               </span>
             </h1>
@@ -227,7 +201,7 @@ export default function Home() {
       </section>
 
       {/* ═══ WORK ═══ */}
-      <section className="band">
+      <section className="band" data-hud="01 — WORK">
         {/* Meta row stays on the container grid; the band below breaks it. */}
         <SectionMeta index="01">
           <Link
@@ -278,7 +252,7 @@ export default function Home() {
       </section>
 
       {/* ═══ WRITING ═══ */}
-      <section className="band">
+      <section className="band" data-hud="02 — WRITEUPS">
         <SectionMeta index="02">
           <Link
             href="/writeups"
@@ -314,7 +288,7 @@ export default function Home() {
       </section>
 
       {/* ═══ CREDENTIALS ═══ */}
-      <section className="band border-t border-border">
+      <section className="band border-t border-border" data-hud="03 — VERIFIED">
         <SectionMeta index="03">
           <span className="label shrink-0">
             {earned.length} earned · {verifiable} verifiable
@@ -359,7 +333,7 @@ export default function Home() {
       </section>
 
       {/* ═══ ABOUT ═══ */}
-      <section className="band border-t border-border">
+      <section className="band border-t border-border" data-hud="04 — ABOUT">
         <SectionMeta index="04">
           <span className="label shrink-0">Background</span>
         </SectionMeta>
@@ -561,7 +535,7 @@ export default function Home() {
       </section>
 
       {/* ═══ CONTACT ═══ */}
-      <section id="contact" className="band scroll-mt-20 border-t border-border">
+      <section id="contact" data-hud="05 — CONTACT" className="band scroll-mt-20 border-t border-border">
         <SectionMeta index="05">
           <span className="label shrink-0">Open to roles</span>
         </SectionMeta>

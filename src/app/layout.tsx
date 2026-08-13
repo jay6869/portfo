@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import { Inter, Space_Grotesk, JetBrains_Mono, Anybody } from "next/font/google";
 import "./globals.css";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
 import { PageTransition } from "@/components/page-transition";
 import { Providers } from "@/components/providers";
+import { Hud } from "@/components/hud";
 import { SITE, SITE_URL } from "@/lib/site";
 
 const inter = Inter({
@@ -18,6 +19,22 @@ const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   weight: ["500", "600", "700"],
   variable: "--font-space-grotesk",
+  display: "swap",
+});
+
+// Hero display face. Loaded through next/font rather than the @import the
+// source component uses: that fetches from fonts.googleapis.com inside a
+// <style> tag, which this project's `style-src 'self'` CSP blocks outright —
+// the text would silently fall back and the variable axes would do nothing.
+// next/font self-hosts, so no CSP change is needed.
+//
+// Both wght and wdth are requested: the pressure effect drives the width axis
+// as well as weight, which is what makes letters visibly stretch rather than
+// just thicken.
+const anybody = Anybody({
+  subsets: ["latin"],
+  axes: ["wdth"],
+  variable: "--font-pressure",
   display: "swap",
 });
 
@@ -76,7 +93,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`dark ${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
+      className={`dark ${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} ${anybody.variable}`}
     >
       <body>
         {/* Direction contract, emitted as a real HTML comment so it survives the
@@ -122,6 +139,15 @@ finish review, the verdict, and DESIGN.md
               "window.__revealFailsafe=setTimeout(function(){document.documentElement.classList.add('js-failed')},4000)",
           }}
         />
+        {/* Accent is restored before first paint. Applying it from an effect
+            would flash the default colour across the whole page on every load,
+            because every token on the site derives from --signal. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var a=localStorage.getItem('jg-accent');if(a)document.documentElement.style.setProperty('--signal',a)}catch(e){}",
+          }}
+        />
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded focus:bg-[color:var(--signal)] focus:px-3 focus:py-2 focus:text-black"
@@ -134,6 +160,7 @@ finish review, the verdict, and DESIGN.md
             <PageTransition>{children}</PageTransition>
           </main>
           <Footer />
+          <Hud />
         </Providers>
       </body>
     </html>
