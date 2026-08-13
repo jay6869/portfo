@@ -1,21 +1,48 @@
+import fs from "node:fs";
+import path from "node:path";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowUpRight, ArrowRight, Download } from "lucide-react";
-import { HeroDots } from "@/components/hero-dots";
+import {
+  ArrowUpRight,
+  ArrowRight,
+  Download,
+  Bug,
+  Radar,
+  ShieldCheck,
+  Binary,
+  Terminal,
+} from "lucide-react";
+import { HeroDither } from "@/components/hero-dither";
 import { DecodeText } from "@/components/decode-text";
 import { ScrollChoreography } from "@/components/scroll-choreography";
 import { MarqueeBand } from "@/components/marquee-band";
 import { ContactForm } from "@/components/contact-form";
+import { TextGlitch } from "@/components/ui/text-glitch-effect";
 import { skillGroups, certs } from "@/lib/data";
 import { getAllProjects, getAllWriteups } from "@/lib/posts";
 
 /**
- * Portrait for the About band. Drop the file into /public and set this to its
- * path (e.g. "/janith.jpg") — the duotone treatment and caption come with it.
- * Left null until a real photograph exists: an empty frame waiting on an asset
- * reads as an abandoned site, so the column is composed to stand without one.
+ * Decorative visual for the About band.
+ *
+ * Save the artwork into /public as `about-visual.jpg` (or .png / .webp) and it
+ * appears automatically. Resolved against the filesystem at build time rather
+ * than hardcoded, so a missing file renders nothing instead of a broken image
+ * — an empty frame waiting on an asset reads as an abandoned site, and the
+ * column is composed to stand without one.
+ *
+ * Deliberately NOT treated as a portrait: it is artwork, not a photograph of
+ * the person, so it carries an empty alt and no location caption. PRODUCT.md
+ * records that no photograph exists; captioning art as if it were one would be
+ * the sort of small dishonesty this site's whole argument rests on avoiding.
  */
-const PORTRAIT: string | null = null;
+const ABOUT_IMAGE = ["about-visual.jpg", "about-visual.png", "about-visual.webp"]
+  .map((f) => ({ f, abs: path.join(process.cwd(), "public", f) }))
+  .find(({ abs }) => fs.existsSync(abs));
+
+/** One icon per skill group, in the order they are declared in lib/data.
+ *  Kept positional rather than keyed by name so adding a group cannot leave a
+ *  row with no icon — it wraps instead. */
+const COMPETENCY_ICONS = [Bug, Radar, ShieldCheck, Binary, Terminal] as const;
 
 /** The hero name, one hover target per letter.
  *  Pure markup and CSS — no client JS. The real string is read once by
@@ -108,13 +135,7 @@ export default function Home() {
         data-hero
         className="relative flex min-h-[100svh] flex-col justify-center overflow-hidden"
       >
-        <HeroDots />
-        {PORTRAIT && (
-          <div className="hero-portrait" aria-hidden>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={PORTRAIT} alt="" />
-          </div>
-        )}
+        <HeroDither />
         <div className="hero-veil pointer-events-none absolute inset-0 z-10" aria-hidden />
 
         <div
@@ -248,47 +269,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ═══ APPROACH ═══ */}
-      <section className="band border-t border-border bg-[color:var(--surface)]/40">
-        <div className="mx-auto max-w-[1600px] px-5 sm:px-8">
-          <h2 className="display display-section mb-16 overflow-hidden text-foreground">
-            <span data-reveal-title className="block">
-              Break it,
-              <br />
-              <span className="display-outline">then catch it.</span>
-            </span>
-          </h2>
-
-          <div data-reveal-group className="grid gap-x-12 gap-y-12 md:grid-cols-3">
-            {[
-              {
-                k: "01",
-                t: "Recon & exploit",
-                d: "Web exploitation, network attack paths, and tooling that automates the boring parts of both. Burp, sqlmap, ffuf, Nmap, Metasploit.",
-              },
-              {
-                k: "02",
-                t: "Detection",
-                d: "Sigma rules, Suricata signatures, and Wazuh pipelines — written against attacks I ran myself, so I know exactly what they have to catch.",
-              },
-              {
-                k: "03",
-                t: "The loop",
-                d: "Writing a rule that catches your own exploit is a uniquely satisfying loop. Each side sharpens the other, which is why I want to work purple.",
-              },
-            ].map((c) => (
-              <div key={c.k} data-reveal-item>
-                <div className="label mb-5 text-[color:var(--signal)]/70">{c.k}</div>
-                <h3 className="display mb-4 text-[clamp(1.3rem,2.6vw,2rem)] text-foreground">
-                  {c.t}
-                </h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">{c.d}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ═══ WRITING ═══ */}
       <section className="band">
         <SectionMeta index="02">
@@ -380,18 +360,16 @@ export default function Home() {
 
         <div className="mx-auto max-w-[1600px] px-5 sm:px-8">
           <div className="grid gap-14 md:grid-cols-2 md:gap-20">
-            {/* Left — portrait when one exists, then the standing facts. */}
+            {/* Left — the visual when one is present, then the standing facts. */}
             <div data-reveal>
-              {PORTRAIT && (
-                <figure className="mb-8">
-                  <div className="portrait aspect-[4/5] w-full max-w-md">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={PORTRAIT} alt="Janith Godage" />
-                  </div>
-                  <figcaption className="label mt-3">
-                    Sri Lanka — GMT+5:30
-                  </figcaption>
-                </figure>
+              {ABOUT_IMAGE && (
+                <div
+                  className="about-visual mb-9 aspect-[9/16] w-full max-w-sm"
+                  aria-hidden
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`/${ABOUT_IMAGE.f}`} alt="" loading="lazy" decoding="async" />
+                </div>
               )}
 
               <p className="text-pretty text-[clamp(1.05rem,2vw,1.5rem)] italic leading-snug text-foreground/90">
@@ -475,6 +453,88 @@ export default function Home() {
               </a>
             </div>
           </div>
+
+          {/* How the work is done — moved in from its own section so the whole
+              picture of the person sits in one place. */}
+          <h3 className="display display-section mb-10 mt-20 overflow-hidden text-foreground sm:mb-14 sm:mt-28">
+            <span data-reveal-title className="block">
+              Break it,
+              <br />
+              <span className="display-outline">then catch it.</span>
+            </span>
+          </h3>
+
+          <LabelRule className="mb-8">Core foundations</LabelRule>
+          <div
+            data-reveal-group
+            className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4"
+          >
+            {[
+              {
+                k: "01",
+                t: "Recon & exploit",
+                d: "Web exploitation, network attack paths, and tooling that automates the boring parts of both. Burp, sqlmap, ffuf, Nmap, Metasploit.",
+              },
+              {
+                k: "02",
+                t: "Detection",
+                d: "Sigma rules, Suricata signatures, and Wazuh pipelines — written against attacks I ran myself, so I know exactly what they have to catch.",
+              },
+              {
+                k: "03",
+                t: "The loop",
+                d: "Writing a rule that catches your own exploit is a uniquely satisfying loop. Each side sharpens the other, which is why I want to work purple.",
+              },
+              {
+                k: "04",
+                t: "Written down",
+                d: `Every lab and finding gets a walkthrough — ${writeups.length} of them so far, plus reference sheets, written for the next person who has to read them.`,
+              },
+            ].map((c) => (
+              <div
+                key={c.k}
+                data-card-reveal
+                className="foundation-card hairline rounded-lg bg-[color:var(--surface)]/40 p-5 sm:p-6"
+              >
+                <div className="label mb-5 text-[color:var(--signal)]/70">{c.k}</div>
+                <h4 className="display mb-3 text-[clamp(1.05rem,1.9vw,1.4rem)] text-foreground">
+                  {c.t}
+                </h4>
+                <p className="text-sm leading-relaxed text-muted-foreground">{c.d}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Competencies read straight off skillGroups, so this list and the
+              toolchain band can never disagree about what the toolkit is. */}
+          <LabelRule className="mb-2 mt-16 sm:mt-24">Core competencies</LabelRule>
+          <div data-reveal-group className="about-group">
+            {skillGroups.map((g, i) => {
+              const Icon = COMPETENCY_ICONS[i % COMPETENCY_ICONS.length];
+              return (
+                <div
+                  key={g.domain}
+                  data-reveal-item
+                  className="about-row group flex-col items-start gap-2 md:flex-row md:items-baseline md:gap-6"
+                >
+                  <span className="flex min-w-0 items-center gap-3.5 md:gap-4">
+                    <Icon
+                      className="size-4 shrink-0 text-[color:var(--signal)]/70 transition-colors duration-300 group-hover:text-[color:var(--signal)] md:size-5"
+                      aria-hidden
+                    />
+                    <span className="display text-[clamp(1.05rem,2.4vw,1.9rem)] text-foreground">
+                      {g.domain}
+                    </span>
+                  </span>
+                  {/* Stacked under the title on phones rather than hidden — the
+                      toolkit is the substance of the row, not decoration. */}
+                  <span className="label pl-[1.9rem] leading-relaxed text-muted-foreground md:max-w-[46%] md:shrink-0 md:pl-0 md:text-right">
+                    {g.items.join(" · ")}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </section>
 
@@ -487,43 +547,36 @@ export default function Home() {
         <MarqueeBand text="Let’s talk" className="mb-14" />
 
         <div className="mx-auto max-w-4xl px-5 sm:px-8">
-          {/* Channels, as the record rows used elsewhere. */}
-          <div data-reveal-group className="about-group">
+          {/* Channels — value decodes under a signal plate on hover. */}
+          <div data-reveal-group>
             {[
               {
-                k: "Email",
-                v: "janithzgodage@gmail.com",
+                label: "Email",
+                text: "janithzgodage@gmail.com",
                 href: "mailto:janithzgodage@gmail.com",
-                ext: false,
+                external: false,
               },
               {
-                k: "LinkedIn",
-                v: "linkedin.com/in/janith-godage-6953s",
+                label: "LinkedIn",
+                text: "linkedin.com/in/janith-godage-6953s",
                 href: "https://www.linkedin.com/in/janith-godage-6953s/",
-                ext: true,
+                external: true,
               },
               {
-                k: "GitHub",
-                v: "github.com/jay6869",
+                label: "GitHub",
+                text: "github.com/jay6869",
                 href: "https://github.com/jay6869",
-                ext: true,
+                external: true,
               },
             ].map((c) => (
-              <a
-                key={c.k}
+              <TextGlitch
+                key={c.label}
                 data-reveal-item
+                label={c.label}
+                text={c.text}
                 href={c.href}
-                {...(c.ext ? { target: "_blank", rel: "noreferrer noopener" } : {})}
-                className="about-row group"
-              >
-                <span className="min-w-0">
-                  <span className="label block text-[color:var(--signal)]/70">{c.k}</span>
-                  <span className="display mt-2 block break-all text-[clamp(1.15rem,3.2vw,2.4rem)] text-foreground transition-colors group-hover:text-[color:var(--signal)]">
-                    {c.v}
-                  </span>
-                </span>
-                <ArrowUpRight className="size-5 shrink-0 text-muted-foreground transition-all group-hover:-translate-y-1 group-hover:translate-x-1 group-hover:text-[color:var(--signal)]" />
-              </a>
+                external={c.external}
+              />
             ))}
           </div>
 

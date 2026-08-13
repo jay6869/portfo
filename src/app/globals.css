@@ -492,6 +492,105 @@
   );
 }
 
+/* Foundation cards. Hover is a desktop-only affordance, so touch gets an
+   :active state instead — otherwise tapping a card gives no feedback at all. */
+.foundation-card {
+  transition:
+    border-color 0.4s cubic-bezier(0.2, 0.7, 0.2, 1),
+    background-color 0.4s,
+    transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+@media (hover: hover) {
+  .foundation-card:hover {
+    border-color: color-mix(in oklab, var(--signal) 42%, transparent);
+    background-color: color-mix(in oklab, var(--signal) 4%, transparent);
+  }
+}
+.foundation-card:active {
+  transform: scale(0.985);
+  border-color: color-mix(in oklab, var(--signal) 42%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .foundation-card { transition: none; }
+  .foundation-card:active { transform: none; }
+}
+
+/* ---------- Glitch contact rows ----------
+   A signal plate wipes open from the centre line while the value decodes. The
+   plate is clipped rather than scaled so the edges stay hard — a scale or
+   opacity fade would read as a highlight, not as type being overprinted. */
+
+.glitch-row {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-block: 1.35rem;
+}
+
+.glitch-row::before,
+.glitch-row:last-child::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  height: 1px;
+  background-image: repeating-linear-gradient(
+    to right,
+    color-mix(in oklab, var(--muted-foreground) 62%, transparent) 0 2px,
+    transparent 2px 7px
+  );
+  transform: scaleX(var(--rule-x, 1));
+  transform-origin: left;
+}
+.glitch-row::before { top: 0; }
+.glitch-row:last-child::after { bottom: 0; }
+
+/* Base and plate share one grid cell, so they cannot drift out of register
+   however the string is re-measured mid-scramble. */
+.glitch-stack {
+  display: grid;
+  position: relative;
+  overflow: hidden;
+}
+.glitch-stack > * {
+  grid-area: 1 / 1;
+}
+
+.glitch-base,
+.glitch-plate-text {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+  font-size: clamp(0.95rem, 3.1vw, 2.3rem);
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.glitch-base {
+  color: var(--foreground);
+  transition: color 0.3s;
+}
+
+.glitch-plate {
+  display: block;
+  background: var(--signal);
+  color: #000;
+  clip-path: polygon(0 50%, 100% 50%, 100% 50%, 0 50%);
+  transition: clip-path 0.42s cubic-bezier(0.2, 0.7, 0.2, 1);
+  will-change: clip-path;
+}
+
+.glitch-row:hover .glitch-plate,
+.glitch-row:focus-visible .glitch-plate {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glitch-plate { transition: none; }
+}
+
 /* ---------- About: résumé rows ---------- */
 
 .about-row {
@@ -514,6 +613,11 @@
     color-mix(in oklab, var(--muted-foreground) 62%, transparent) 0 2px,
     transparent 2px 7px
   );
+  /* The rule draws itself left-to-right as the row arrives. Defaults to 1 so
+     it is fully present with JS off — the animation only ever removes it
+     briefly, never gates it. */
+  transform: scaleX(var(--rule-x, 1));
+  transform-origin: left;
 }
 .about-row::before { top: 0; }
 .about-group .about-row:last-child::after { bottom: 0; }
@@ -527,17 +631,18 @@
   color: var(--muted-foreground);
 }
 
-/* Portrait slot. Duotone by construction: the image renders in luminosity over
-   a signal-tinted ground, so a plain photograph adopts the site's one accent
-   instead of introducing a second colour world. Dormant until a portrait
-   exists — see PORTRAIT in app/page.tsx. */
-.portrait {
+/* About visual. Duotone by construction: the artwork renders in luminosity
+   over a signal-tinted ground, so its own greens are replaced by this site's
+   accent rather than sitting next to it. Source art carrying a different green
+   — lime against our spring green — would otherwise read as two palettes on
+   one page. Dormant until the file exists (see ABOUT_IMAGE in app/page.tsx). */
+.about-visual {
   position: relative;
   overflow: hidden;
   border-radius: 0.4rem;
   background: color-mix(in oklab, var(--signal) 62%, #121212);
 }
-.portrait img {
+.about-visual img {
   display: block;
   width: 100%;
   height: 100%;
@@ -582,32 +687,12 @@
   .hero-letter { transition: none; }
 }
 
-/* Portrait bled into the hero's right side — masked out toward the type so it
-   never competes with the name for the first read. */
-.hero-portrait {
-  position: absolute;
-  inset-block: 0;
-  right: 0;
-  z-index: 1;
-  width: min(58%, 940px);
-  pointer-events: none;
-  mask-image:
-    linear-gradient(to right, transparent 0%, #000 55%),
-    linear-gradient(to bottom, #000 68%, transparent 98%);
-  mask-composite: intersect;
-  -webkit-mask-image:
-    linear-gradient(to right, transparent 0%, #000 55%),
-    linear-gradient(to bottom, #000 68%, transparent 98%);
-  -webkit-mask-composite: source-in;
-}
-.hero-portrait img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: 50% 20%;
-  filter: grayscale(1) contrast(1.15);
-  mix-blend-mode: luminosity;
-  opacity: 0.55;
+/* The dither buffer renders at 1/PIXEL scale; this upscales it without
+   smoothing, which is what makes the pixelation read as deliberate rather
+   than as a blurry low-res canvas. */
+.hero-dither {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 /* Hero vignette, so the lettering always sits on enough ground to read. */

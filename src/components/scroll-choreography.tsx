@@ -99,6 +99,42 @@ export function ScrollChoreography({ children }: { children: ReactNode }) {
         });
       });
 
+      // Foundation cards: the shared row reveal plus a touch of scale, so a
+      // bordered card settles rather than simply sliding. Kept on its own hook
+      // so the scale never leaks onto the plain list rows.
+      gsap.utils.toArray<HTMLElement>("[data-reveal-group]").forEach((group) => {
+        const cards = group.querySelectorAll("[data-card-reveal]");
+        if (!cards.length) return;
+        gsap.from(cards, {
+          opacity: 0,
+          y: 22,
+          scale: 0.985,
+          duration: 0.7,
+          ease: "expo.out",
+          stagger: 0.08,
+          scrollTrigger: { trigger: group, start: "top 85%", once: true },
+        });
+      });
+
+      // Each row's dotted rule draws itself left-to-right as the row lands.
+      // Animating the custom property lets a pseudo-element be driven from JS;
+      // its CSS fallback is 1, so the rule is simply present without this.
+      gsap.utils.toArray<HTMLElement>("[data-reveal-group]").forEach((group) => {
+        const rows = group.querySelectorAll<HTMLElement>(".about-row, .glitch-row");
+        if (!rows.length) return;
+        gsap.fromTo(
+          rows,
+          { "--rule-x": 0 },
+          {
+            "--rule-x": 1,
+            duration: 0.75,
+            ease: "expo.out",
+            stagger: 0.07,
+            scrollTrigger: { trigger: group, start: "top 85%", once: true },
+          },
+        );
+      });
+
       gsap.utils.toArray<HTMLElement>("[data-reveal]").forEach((el) => {
         gsap.from(el, {
           opacity: 0,
