@@ -30,14 +30,24 @@ export function useMarqueeMotion(
     /** Baseline travel in px/second, running whether or not anyone scrolls.
      *  Zero makes the band purely scroll-driven: still on a still page. */
     speed,
-    /** Px of extra velocity per px scrolled. Zero decouples the band from the
-     *  scroll entirely, leaving it on its baseline at a constant pace. */
-    boost,
+    /** How much of the reader's scroll speed the band borrows, as a ratio.
+     *  0.2 means scrolling at 1000 px/s adds 200 px/s of travel. Zero
+     *  decouples the band from the scroll entirely. */
+    scrollFactor,
+    /** Hard ceiling on that borrowed speed, in px/second. Without one, a
+     *  trackpad flick or a Page Down hands the band a scroll rate no reader
+     *  can follow. */
+    scrollCap = 0,
     /** Off leaves the band parked at its resting offset, costing no rAF at
      *  all. Most bands on the page are static; motion is the exception, so
      *  that a moving band means something rather than being wallpaper. */
     enabled = true,
-  }: { speed: number; boost: number; enabled?: boolean },
+  }: {
+    speed: number;
+    scrollFactor: number;
+    scrollCap?: number;
+    enabled?: boolean;
+  },
 ) {
   useEffect(() => {
     if (!enabled) return;
@@ -49,9 +59,11 @@ export function useMarqueeMotion(
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     let offset = 0;
+    /** The smoothed contribution the scroll is currently making, in px/s. */
     let velocity = 0;
     let half = 0;
-    let lastY = window.scrollY;
+    let pageY = window.scrollY;
+    let lastY = pageY;
     let lastT = performance.now();
     let raf = 0;
     let running = false;
@@ -70,10 +82,11 @@ export function useMarqueeMotion(
     offset = half * 0.14;
     track.style.willChange = "transform";
 
+    // The listener only records where the page is. Everything derived from it
+    // happens in the frame, so a wheel firing twenty events per frame cannot
+    // contribute twenty times.
     const onScroll = () => {
-      const y = window.scrollY;
-      velocity += (y - lastY) * boost;
-      lastY = y;
+      pageY = window.scrollY;
     };
 
     const frame = (now: number) => {
@@ -83,10 +96,34 @@ export function useMarqueeMotion(
       const dt = Math.min((now - lastT) / 1000, 0.05);
       lastT = now;
 
-      // Frame-rate independent decay: the same ~12%-per-60Hz-frame falloff
-      // whether the display runs at 60 or 144.
-      velocity *= Math.pow(0.88, dt * 60);
-      offset += (speed + velocity) * dt;
+      // How fast the reader is scrolling RIGHT NOW, in px/second — not how far
+      // they have scrolled. The previous version accumulated distance into
+      // velocity, so it had no bound: a 300px wheel scroll injected 4800 px/s
+      // against a 72 px/s baseline, and the band bolted before easing back.
+      const rawScroll = dt > 0 ? (pageY - lastY) / dt : 0;
+      lastY = pageY;
+
+      // Asymmetric smoothing: fast to answer, slow to let go.
+      //
+      // A symmetric filter was the real fault here. At 60fps a 130ms constant
+      // moves ~12% of the way to target per frame, and a wheel gesture lasts
+      // about six frames — so the band reached 1-0.88^6 = 54% of the speed
+      // asked of it, and barely a third on a quick flick. Every constant was
+      // being roughly halved before it reached the screen, which is why
+      // raising them kept not helping.
+      //
+      // Rising uses a 45ms constant, so the band is at ~90% within six frames.
+      // Falling uses 280ms, which keeps the tail. The test is on magnitude,
+      // not sign, so a frame that simply carried no scroll event coasts on the
+      // release curve instead of yanking velocity to zero.
+      const target = rawScroll * scrollFactor;
+      const tau = Math.abs(target) > Math.abs(velocity) ? 0.045 : 0.28;
+      velocity += (target - velocity) * (1 - Math.exp(-dt / tau));
+
+      // Signed, so scrolling back up carries the band back the way it came,
+      // then clamped so no input can outrun the cap.
+      const borrowed = Math.max(-scrollCap, Math.min(scrollCap, velocity));
+      offset += (speed + borrowed) * dt;
 
       if (half > 0) {
         offset %= half;
@@ -100,7 +137,11 @@ export function useMarqueeMotion(
       if (running) return;
       running = true;
       lastT = performance.now();
-      lastY = window.scrollY;
+      // Re-baseline on resume: while the band was parked the page may have
+      // moved a long way, and that gap is not motion the band should replay.
+      pageY = window.scrollY;
+      lastY = pageY;
+      velocity = 0;
       raf = requestAnimationFrame(frame);
     };
     const stop = () => {
@@ -133,5 +174,5 @@ export function useMarqueeMotion(
       window.removeEventListener("scroll", onScroll);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [wrapRef, trackRef, speed, boost, enabled]);
+  }, [wrapRef, trackRef, speed, scrollFactor, scrollCap, enabled]);
 }

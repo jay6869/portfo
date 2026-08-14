@@ -25,11 +25,11 @@ export function ToolMarquee({ note }: { note: string }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const tools = TOOL_BAND;
 
-  // boost 0: this band is deliberately deaf to the scroll. It keeps one
+  // scrollFactor 0: this band is deliberately deaf to the scroll. It keeps one
   // unvarying pace while the display bands react, so the page has a constant
   // to read the scroll-driven motion against instead of everything surging at
   // once.
-  useMarqueeMotion(wrapRef, trackRef, { speed: 34, boost: 0 });
+  useMarqueeMotion(wrapRef, trackRef, { speed: 34, scrollFactor: 0 });
 
   return (
     <section ref={wrapRef} className="tool-band" aria-label="Toolchain">

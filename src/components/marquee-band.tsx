@@ -42,9 +42,16 @@ export function MarqueeBand({
   const wrapRef = useRef<HTMLHeadingElement>(null);
   const trackRef = useRef<HTMLSpanElement>(null);
 
+  // These are px/second, and px/second means nothing without the type size.
+  // This band sets at up to 304px, where a letter is roughly 200px wide — so
+  // 900px/s, which sounds quick, is four letters a second and reads as a crawl.
+  // Calibrated in letter-widths instead: a normal wheel moves the band about
+  // five or six letters a second, a hard flick about twelve, and the cap keeps
+  // a trackpad flick and a Page Down landing in the same place.
   useMarqueeMotion(wrapRef, trackRef, {
-    speed: motion === "drift" ? 72 : 0,
-    boost: motion === "drift" ? 16 : 20,
+    speed: motion === "drift" ? 120 : 0,
+    scrollFactor: motion === "drift" ? 0.85 : 1.3,
+    scrollCap: motion === "drift" ? 1700 : 2600,
   });
 
   // Forced even: the solid/outline alternation has to survive the wrap, and an
