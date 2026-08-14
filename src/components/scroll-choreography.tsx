@@ -51,31 +51,10 @@ export function ScrollChoreography({ children }: { children: ReactNode }) {
         },
       });
 
-      // Scrubbed marquee bands: the track's horizontal position is tied to the
-      // section's passage through the viewport, so the type moves only while
-      // the reader is scrolling. `scrub` smooths it over 0.5s so a flicked
-      // wheel glides rather than snapping.
-      gsap.utils.toArray<HTMLElement>("[data-scrub-marquee]").forEach((track) => {
-        const section = track.closest("section") ?? track;
-        // Starts already offset so the band is cut off at BOTH edges from the
-        // first frame — it should read as a strip passing through, never as a
-        // phrase that begins at the left margin. The end value keeps the last
-        // repeat on screen at the widest viewport, so no gap can open up.
-        gsap.fromTo(
-          track,
-          { xPercent: -8 },
-          {
-            xPercent: -46,
-            ease: "none",
-            scrollTrigger: {
-              trigger: section,
-              start: "top bottom",
-              end: "bottom top",
-              scrub: 0.5,
-            },
-          },
-        );
-      });
+      // Marquee bands used to be scrubbed from here — position tied directly to
+      // scroll, which meant they stood still on a static page. They now run
+      // their own momentum loop (see marquee-motion.ts), so writing transform
+      // on those tracks from GSAP as well would put two owners on one property.
 
       // Section titles wipe up from behind their own baseline.
       gsap.utils.toArray<HTMLElement>("[data-reveal-title]").forEach((el) => {
@@ -97,6 +76,29 @@ export function ScrollChoreography({ children }: { children: ReactNode }) {
           stagger: 0.07,
           scrollTrigger: { trigger: group, start: "top 82%", once: true },
         });
+      });
+
+      // Credential seals turn with the scroll rather than spinning on a timer.
+      // A continuous rotation would be decoration that never stops — and past
+      // five seconds it would owe the visitor a pause control under WCAG 2.2.2.
+      // Tied to scroll it is motion the reader is driving, and it stops the
+      // instant they do. Only the ring moves; the shield in the centre is
+      // outside this element and stays upright.
+      gsap.utils.toArray<HTMLElement>("[data-seal] .seal-svg").forEach((seal) => {
+        gsap.fromTo(
+          seal,
+          { rotate: -14 },
+          {
+            rotate: 14,
+            ease: "none",
+            scrollTrigger: {
+              trigger: seal.closest("[data-seal]") ?? seal,
+              start: "top bottom",
+              end: "bottom top",
+              scrub: 0.8,
+            },
+          },
+        );
       });
 
       // Foundation cards: the shared row reveal plus a touch of scale, so a
