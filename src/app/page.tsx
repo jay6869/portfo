@@ -5,9 +5,12 @@ import Link from "next/link";
 import {
   ArrowUpRight,
   ArrowRight,
-  Download,
   Bug,
   Radar,
+  MapPin,
+  Crosshair,
+  Flag,
+  GraduationCap,
   ShieldCheck,
   Binary,
   Terminal,
@@ -16,10 +19,14 @@ import { HeroDither } from "@/components/hero-dither";
 import { DecodeText } from "@/components/decode-text";
 import { ScrollChoreography } from "@/components/scroll-choreography";
 import { MarqueeBand } from "@/components/marquee-band";
+import { ToolMarquee } from "@/components/tool-marquee";
 import { ContactForm } from "@/components/contact-form";
 import { TextGlitch } from "@/components/ui/text-glitch-effect";
 import { AboutMedia } from "@/components/about-media";
+import { CertSeal } from "@/components/cert-seal";
 import { TextPressure } from "@/components/ui/text-pressure";
+import { CvDownload } from "@/components/cv-download";
+import { CV_HREF, CV_DOWNLOAD_NAME, CV_SIZE } from "@/lib/cv";
 import { skillGroups, certs } from "@/lib/data";
 import { getAllProjects, getAllWriteups } from "@/lib/posts";
 
@@ -47,6 +54,28 @@ const ABOUT_MEDIA = (() => {
     return undefined;
   }
 })();
+
+/**
+ * The verification identifier, read out of the credential URL itself.
+ *
+ * Never hand-written: the ID and the link it is printed beside come from one
+ * string, so the page cannot display a number that does not resolve. Handles
+ * the two shapes in use — a query parameter (`?id=…`) and a path segment,
+ * where Credly appends `/public_url` after the badge's own identifier.
+ */
+function credentialId(url?: string) {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    const fromQuery = u.searchParams.get("id");
+    if (fromQuery) return fromQuery;
+    const parts = u.pathname.split("/").filter(Boolean);
+    const last = parts.at(-1);
+    return (last === "public_url" ? parts.at(-2) : last) ?? null;
+  } catch {
+    return null;
+  }
+}
 
 /** One icon per skill group, in the order they are declared in lib/data.
  *  Kept positional rather than keyed by name so adding a group cannot leave a
@@ -111,7 +140,6 @@ export default function Home() {
   // Not every credential has a public verification URL, so the count states
   // both figures rather than claiming the whole set is checkable.
   const verifiable = earned.filter((c) => c.credentialUrl).length;
-  const tools = skillGroups.flatMap((g) => g.items);
 
   return (
     <ScrollChoreography>
@@ -134,7 +162,7 @@ export default function Home() {
               Cybersecurity undergraduate
             </p>
             <p className="label mt-2.5">
-              <DecodeText text="Offensive tooling · Detection engineering · Research" />
+              <DecodeText text="Penetration testing · SOC · Security analysis" />
             </p>
           </div>
 
@@ -155,12 +183,12 @@ export default function Home() {
 
             <ul
               data-hero-fade
-              className="mt-9 flex flex-wrap gap-x-9 gap-y-3"
+              className="mt-10 flex flex-wrap gap-x-9 gap-y-3"
             >
               {[
-                "Available for internships",
-                "Based in Sri Lanka",
-                "Open to remote",
+                "Web & network exploitation",
+                "Detection engineering",
+                "Sri Lanka · GMT+5:30",
               ].map((f) => (
                 <li key={f} className="label flex items-center gap-2.5">
                   <span
@@ -184,25 +212,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ═══ TOOLCHAIN MARQUEE ═══ */}
-      <section className="relative overflow-hidden border-y border-border py-6">
-        <h2 className="sr-only">Toolchain</h2>
-        <div className="marquee" aria-hidden>
-          {[0, 1].map((dup) => (
-            <div key={dup} className="flex shrink-0 items-center">
-              {tools.map((t) => (
-                <span key={`${dup}-${t}`} className="flex items-center">
-                  <span className="display px-6 text-[clamp(1.1rem,2.4vw,2rem)] text-foreground/25">
-                    {t}
-                  </span>
-                  <span className="size-1 rounded-full bg-[color:var(--signal)]/50" />
-                </span>
-              ))}
-            </div>
-          ))}
-        </div>
-        <p className="sr-only">{tools.join(", ")}</p>
-      </section>
+      {/* ═══ TOOLCHAIN ═══ */}
+      <ToolMarquee note="Some of the tools I work in" />
 
       {/* ═══ WORK ═══ */}
       <section className="band" data-hud="01 — WORK">
@@ -217,38 +228,45 @@ export default function Home() {
           </Link>
         </SectionMeta>
 
-        <MarqueeBand text="Selected work" className="mb-14" />
+        {/* The only band that travels under its own power. The other four are
+            scroll-driven, so this one reads as the page's moving part. */}
+        <MarqueeBand text="Selected work" motion="drift" className="mb-14" />
 
-        <div data-reveal-group className="mx-auto max-w-[1600px] px-5 sm:px-8">
+        <div data-reveal-group className="row-stack mx-auto max-w-[1600px] px-5 sm:px-8">
           {projects.map((p, i) => (
             <Link
               key={p.slug}
               href={`/projects/${p.slug}`}
               data-reveal-item
-              className="row-link group py-8 sm:py-11"
+              className="row-link group"
             >
-              <div className="flex flex-col gap-5 md:flex-row md:items-center md:gap-10">
-                <span className="label shrink-0 text-[color:var(--signal)]/70">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
+              <div className="row-body">
+                <div className="row-meta label">
+                  <span className="text-[color:var(--signal)]/70">
+                    {String(i + 1).padStart(3, "0")}
+                  </span>
+                  <span>{p.type}</span>
+                  <span>{p.stack.slice(0, 2).join(" · ")}</span>
+                </div>
 
-                <h3 className="row-title display min-w-0 flex-1 text-[clamp(1.7rem,4.6vw,3.4rem)] text-foreground">
-                  {p.title}
-                </h3>
-
-                <div className="flex shrink-0 items-center gap-6 md:w-[34%]">
-                  <p className="min-w-0 flex-1 text-sm leading-relaxed text-muted-foreground">
+                <div className="min-w-0">
+                  {/* Paired with the detail page's h1. The name is applied at
+                      click time by ViewTransitions, not here — see that file. */}
+                  <h3
+                    data-vt-name={`rec-${p.slug}`}
+                    className="row-title display display-lead text-foreground"
+                  >
+                    {p.title}
+                  </h3>
+                  <p className="row-desc text-sm leading-relaxed text-muted-foreground">
                     {p.oneLiner}
                   </p>
-                  <ArrowUpRight className="size-5 shrink-0 text-muted-foreground transition-all group-hover:-translate-y-1 group-hover:translate-x-1 group-hover:text-[color:var(--signal)]" />
                 </div>
-              </div>
 
-              <div className="label mt-5 flex flex-wrap gap-x-5 gap-y-2 md:pl-[calc(3.5rem)]">
-                <span className="text-[color:var(--signal)]/70">{p.type}</span>
-                {p.stack.slice(0, 5).map((s) => (
-                  <span key={s}>{s}</span>
-                ))}
+                <span className="row-cta label text-[color:var(--signal)]">
+                  Read
+                  <ArrowRight className="size-3" />
+                </span>
               </div>
             </Link>
           ))}
@@ -269,22 +287,39 @@ export default function Home() {
 
         <MarqueeBand text="From the lab" className="mb-14" />
 
-        <div data-reveal-group className="mx-auto max-w-[1600px] px-5 sm:px-8">
-          {writeups.slice(0, 4).map((w) => (
+        <div data-reveal-group className="row-stack mx-auto max-w-[1600px] px-5 sm:px-8">
+          {writeups.slice(0, 4).map((w, i) => (
             <Link
               key={w.slug}
               href={`/writeups/${w.slug}`}
               data-reveal-item
-              className="row-link group py-7"
+              className="row-link group"
             >
-              <div className="flex flex-col gap-4 md:flex-row md:items-baseline md:gap-10">
-                <time className="label shrink-0 md:w-28" dateTime={w.date}>
-                  {w.date}
-                </time>
-                <h3 className="row-title display min-w-0 flex-1 text-[clamp(1.15rem,2.6vw,2rem)] text-foreground">
-                  {w.title}
-                </h3>
-                <span className="label shrink-0">{w.readingTime}</span>
+              <div className="row-body">
+                <div className="row-meta label">
+                  <span className="text-[color:var(--signal)]/70">
+                    {String(i + 1).padStart(3, "0")}
+                  </span>
+                  <time dateTime={w.date}>{w.date}</time>
+                  <span>{w.readingTime}</span>
+                </div>
+
+                <div className="min-w-0">
+                  <h3
+                    data-vt-name={`rec-${w.slug}`}
+                    className="row-title display display-lead text-foreground"
+                  >
+                    {w.title}
+                  </h3>
+                  <p className="row-desc text-sm leading-relaxed text-muted-foreground">
+                    {w.excerpt}
+                  </p>
+                </div>
+
+                <span className="row-cta label text-[color:var(--signal)]">
+                  Read
+                  <ArrowRight className="size-3" />
+                </span>
               </div>
             </Link>
           ))}
@@ -301,38 +336,95 @@ export default function Home() {
 
         <MarqueeBand text="Verified" className="mb-14" />
 
-        <div className="mx-auto max-w-[1600px] px-5 sm:px-8">
-          <div data-reveal-group className="grid gap-6">
-            {earned.map((c) => (
-              <div
-                key={c.name}
-                data-reveal-item
-                className="flex flex-wrap items-baseline justify-between gap-4 border-b border-border pb-6"
-              >
+        {/* The ledger.
+            This section used to opt out of every strong move the page owns: it
+            ran at display-sub — the SMALLEST display role — in a band whose
+            entire job is proof, while Work above it ran at display-lead. It now
+            uses the same full-bleed row-link skeleton as Work, at the same
+            scale, so the evidence reads as loudly as the claims it backs.
+
+            The one thing this band shows that nothing else on the site does is
+            the actual verification ID. A recruiter can read HV-CORE-L1RRIFZQ
+            straight off the page, and the fingerprint framing is the audience's
+            own idiom — this is a reader who checks key fingerprints and commit
+            SHAs by eye. It is also the honest structure: rows that can be
+            independently checked carry an ID and an action, and the one that
+            cannot says so plainly rather than borrowing the same authority. */}
+        <div data-reveal-group className="row-stack mx-auto max-w-[1600px] px-5 sm:px-8">
+          {earned.map((c) => {
+            const id = credentialId(c.credentialUrl);
+            const checkable = Boolean(c.credentialUrl && id);
+
+            const body = (
+              <div className="row-body">
+                {/* The seal carries the state visually; the sr-only text
+                    carries it for anyone the seal cannot reach. */}
+                <div data-seal className="row-meta">
+                  <CertSeal checkable={checkable} />
+                  <span className="sr-only">
+                    {checkable ? "Verifiable credential" : "Held on file"}
+                  </span>
+                </div>
+
                 <div className="min-w-0">
-                  <div className="label mb-2">{c.provider}</div>
-                  <div className="display text-[clamp(1rem,2vw,1.5rem)] text-foreground">
+                  <h3
+                    className={`row-title display display-lead ${
+                      checkable ? "text-foreground" : "text-muted-foreground"
+                    }`}
+                  >
                     {c.name}
+                  </h3>
+                  <p className="row-desc text-sm leading-relaxed text-muted-foreground">
+                    {c.provider}
+                  </p>
+
+                  <div className="label mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
+                    {checkable ? (
+                      <>
+                        <span className="text-[color:var(--signal)]/70">ID</span>
+                        <span className="cred-id">{id}</span>
+                      </>
+                    ) : (
+                      <span>Certificate held · no public verification URL</span>
+                    )}
                   </div>
                 </div>
-                {c.credentialUrl && (
-                  <a
-                    href={c.credentialUrl}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="label group inline-flex items-center gap-2 text-[color:var(--signal)] transition-opacity hover:opacity-70"
-                  >
+
+                {checkable && (
+                  <span className="row-cta label text-[color:var(--signal)]">
                     Verify
-                    <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                  </a>
+                    <ArrowUpRight className="size-3" />
+                  </span>
                 )}
               </div>
-            ))}
-            <p data-reveal-item className="text-sm text-muted-foreground">
-              Public repositories are the rest of the evidence — every project above
-              links to its source.
-            </p>
-          </div>
+            );
+
+            const shell = "row-link group";
+
+            // Only the checkable rows are links, so the accent wipe and the
+            // pointer are promises the row can actually keep.
+            return checkable ? (
+              <a
+                key={c.name}
+                href={c.credentialUrl}
+                target="_blank"
+                rel="noreferrer noopener"
+                data-reveal-item
+                className={shell}
+              >
+                {body}
+              </a>
+            ) : (
+              <div key={c.name} data-reveal-item className={shell}>
+                {body}
+              </div>
+            );
+          })}
+
+          <p data-reveal-item className="mt-10 max-w-xl text-sm text-muted-foreground">
+            Public repositories are the rest of the evidence — every project above
+            links to its source.
+          </p>
         </div>
       </section>
 
@@ -362,20 +454,32 @@ export default function Home() {
                   </div>
                 ))}
 
-              <p className="text-pretty text-[clamp(1.05rem,2vw,1.5rem)] italic leading-snug text-foreground/90">
-                Third-year cybersecurity undergraduate who ships the whole loop —
-                builds the offensive tool, writes the honest walkthrough, then writes
-                the detection that catches it.
+              <p className="about-lede text-pretty">
+                I got into security by breaking something I shouldn&apos;t have. I
+                stayed because writing the rule that catches your own exploit is
+                the best feedback loop in this field.
               </p>
 
-              <dl className="mt-8 grid gap-2.5">
+              <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
+                Red, blue, or purple — I care more about the people and the work
+                than the colour of the team.
+              </p>
+
+              {/* Icons rather than emoji: the site runs lucide at one stroke
+                  weight, and emoji would read as a different site pasted in. */}
+              <dl className="quick-facts mt-9">
                 {[
-                  ["Location", "Sri Lanka — remote-friendly"],
-                  ["Availability", "Open for internships"],
-                  ["Languages", "English · Sinhala"],
-                ].map(([k, v]) => (
-                  <div key={k} className="flex flex-wrap items-baseline gap-x-3">
-                    <dt className="label">{k} —</dt>
+                  { Icon: MapPin, k: "Based", v: "Sri Lanka · GMT+5:30" },
+                  { Icon: Crosshair, k: "Focus", v: "Pentesting · SOC · Analysis" },
+                  { Icon: GraduationCap, k: "Studying", v: "SLIIT · 3rd year" },
+                  { Icon: Flag, k: "Weekends", v: "CTFs and HackTheBox" },
+                ].map(({ Icon, k, v }) => (
+                  <div key={k} className="quick-fact">
+                    <Icon
+                      className="size-3.5 shrink-0 text-[color:var(--signal)]"
+                      aria-hidden
+                    />
+                    <dt className="label">{k}</dt>
                     <dd className="label text-foreground">{v}</dd>
                   </div>
                 ))}
@@ -389,7 +493,7 @@ export default function Home() {
               <div className="about-group">
                 <div data-reveal-item className="about-row">
                   <div className="min-w-0">
-                    <div className="display text-[clamp(1.2rem,2.4vw,1.9rem)] text-foreground">
+                    <div className="display display-row text-foreground">
                       SLIIT
                     </div>
                     <div className="about-role mt-1 text-sm">
@@ -431,7 +535,7 @@ export default function Home() {
                 ].map((f) => (
                   <div key={f.name} data-reveal-item className="about-row">
                     <div className="min-w-0">
-                      <div className="display text-[clamp(1.2rem,2.4vw,1.9rem)] text-foreground">
+                      <div className="display display-row text-foreground">
                         {f.name}
                       </div>
                       <div className="about-role mt-1 text-sm">{f.role}</div>
@@ -442,15 +546,12 @@ export default function Home() {
               </div>
 
               <LabelRule className="mb-4 mt-12">In-depth look</LabelRule>
-              <a
+              <CvDownload
                 data-reveal-item
-                href="/janith-godage-cv.pdf"
-                download="Janith-Godage-CV.pdf"
-                className="label group inline-flex items-center gap-2 rounded-md bg-[color:var(--signal)] px-4 py-3 text-black transition-shadow hover:shadow-[0_0_34px_-6px_var(--signal)]"
-              >
-                <Download className="size-3.5 transition-transform group-hover:translate-y-0.5" />
-                Download CV
-              </a>
+                href={CV_HREF}
+                filename={CV_DOWNLOAD_NAME}
+                size={CV_SIZE}
+              />
             </div>
           </div>
 
@@ -497,7 +598,7 @@ export default function Home() {
                 className="foundation-card hairline rounded-lg bg-[color:var(--surface)]/40 p-5 sm:p-6"
               >
                 <div className="label mb-5 text-[color:var(--signal)]/70">{c.k}</div>
-                <h4 className="display mb-3 text-[clamp(1.05rem,1.9vw,1.4rem)] text-foreground">
+                <h4 className="display mb-3 display-sub text-foreground">
                   {c.t}
                 </h4>
                 <p className="text-sm leading-relaxed text-muted-foreground">{c.d}</p>
@@ -522,7 +623,7 @@ export default function Home() {
                       className="size-4 shrink-0 text-[color:var(--signal)]/70 transition-colors duration-300 group-hover:text-[color:var(--signal)] md:size-5"
                       aria-hidden
                     />
-                    <span className="display text-[clamp(1.05rem,2.4vw,1.9rem)] text-foreground">
+                    <span className="display display-row text-foreground">
                       {g.domain}
                     </span>
                   </span>
@@ -541,7 +642,7 @@ export default function Home() {
       {/* ═══ CONTACT ═══ */}
       <section id="contact" data-hud="05 — CONTACT" className="band scroll-mt-20 border-t border-border">
         <SectionMeta index="05">
-          <span className="label shrink-0">Open to roles</span>
+          <span className="label shrink-0">Reply within 48h</span>
         </SectionMeta>
 
         <MarqueeBand text="Let’s talk" className="mb-14" />
@@ -580,9 +681,16 @@ export default function Home() {
             ))}
           </div>
 
-          <p data-reveal className="mt-10 max-w-xl text-sm leading-relaxed text-muted-foreground">
-            Internship, collaboration, or a CTF team — drop a line. I read
-            everything and reply within 48 hours. PGP available on request.
+          <p data-reveal className="contact-ask mt-10">
+            Open to penetration testing, security analysis, and SOC work.
+          </p>
+
+          <p
+            data-reveal
+            className="mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground"
+          >
+            Engagements, research collaboration, or a CTF team — drop a line. I
+            read everything and reply within 48 hours. PGP on request.
           </p>
 
           <div data-reveal className="mt-10">
