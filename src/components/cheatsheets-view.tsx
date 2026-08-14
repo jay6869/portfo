@@ -28,7 +28,7 @@ export function CheatsheetsView({ cheatsheets }: { cheatsheets: CheatsheetMeta[]
         <button
           onClick={() => setTag(null)}
           aria-pressed={tag === null}
-          className={`mono inline-flex min-h-8 items-center rounded-md border px-3 py-1.5 text-[11px] uppercase tracking-wider ${
+          className={`mono inline-flex min-h-8 items-center rounded-md border px-3 py-1.5 text-xs uppercase tracking-wider ${
             tag === null
               ? "border-[color:var(--signal)]/60 bg-[color:var(--signal)]/10 text-[color:var(--signal)]"
               : "border-border bg-[color:var(--surface)] text-muted-foreground hover:text-foreground"
@@ -41,7 +41,7 @@ export function CheatsheetsView({ cheatsheets }: { cheatsheets: CheatsheetMeta[]
             key={t}
             onClick={() => setTag(t)}
             aria-pressed={tag === t}
-            className={`mono inline-flex min-h-8 items-center rounded-md border px-3 py-1.5 text-[11px] uppercase tracking-wider ${
+            className={`mono inline-flex min-h-8 items-center rounded-md border px-3 py-1.5 text-xs uppercase tracking-wider ${
               tag === t
                 ? "border-[color:var(--signal)]/60 bg-[color:var(--signal)]/10 text-[color:var(--signal)]"
                 : "border-border bg-[color:var(--surface)] text-muted-foreground hover:text-foreground"
@@ -70,10 +70,10 @@ export function CheatsheetsView({ cheatsheets }: { cheatsheets: CheatsheetMeta[]
                   <span className="size-2.5 rounded-full bg-[#ff5f56]/70" />
                   <span className="size-2.5 rounded-full bg-[#ffbd2e]/70" />
                   <span className="size-2.5 rounded-full bg-[#27c93f]/70" />
-                  <span className="mono ml-2 truncate text-[11px] text-muted-foreground">
+                  <span className="mono ml-2 truncate text-xs text-muted-foreground">
                     {c.slug}.sheet
                   </span>
-                  <span className="mono ml-auto shrink-0 text-[10px] text-[color:var(--signal)]/70">
+                  <span className="label ml-auto shrink-0 text-[color:var(--signal)]/70">
                     {c.sections} §
                   </span>
                 </div>
@@ -98,7 +98,7 @@ export function CheatsheetsView({ cheatsheets }: { cheatsheets: CheatsheetMeta[]
           <span className="text-[color:var(--signal)]">$</span> grep -rl &quot;{tag}&quot; ./cheatsheets → no matches
           <button
             onClick={() => setTag(null)}
-            className="mt-4 block w-full text-[11px] uppercase tracking-wider text-[color:var(--signal)] hover:underline"
+            className="mt-4 block w-full text-xs uppercase tracking-wider text-[color:var(--signal)] hover:underline"
           >
             clear filter
           </button>

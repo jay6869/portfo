@@ -4,7 +4,7 @@ export default function NotFound() {
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-4">
       <div className="hairline w-full max-w-xl rounded-lg bg-[color:var(--surface)] p-6 sm:p-8">
-        <div className="mono text-[11px] uppercase tracking-widest text-[color:var(--signal)]/80">
+        <div className="label text-[color:var(--signal)]/80">
           status · 404
         </div>
         <h1 className="mono mt-3 text-2xl text-foreground sm:text-3xl">

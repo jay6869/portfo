@@ -57,12 +57,23 @@ export default async function ProjectDetail({
 
       <Reveal>
         <div className="mt-6 flex flex-wrap items-center gap-2">
-          <span className="mono inline-flex items-center rounded border border-[color:var(--signal)]/40 bg-[color:var(--signal)]/5 px-2 py-0.5 text-[10px] tracking-widest text-[color:var(--signal)]">
+          <span className="mono inline-flex items-center rounded border border-[color:var(--signal)]/40 bg-[color:var(--signal)]/5 px-2 py-0.5 text-xs tracking-widest text-[color:var(--signal)]">
             {project.type}
           </span>
           {project.tags.map((t) => <span key={t} className="chip">{t}</span>)}
         </div>
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-5xl">{project.title}</h1>
+        {/* The other end of the morph. It carries the name unconditionally —
+            unique on this page — while the index assigns its half at click
+            time. Set in the display face and at the index's own row size so
+            the two ends are the same piece of type at two scales; morphing
+            between a display heading and a different family would read as a
+            cross-fade between two headings, which is the thing this replaces. */}
+        <h1
+          style={{ viewTransitionName: `rec-${project.slug}` }}
+          className="display display-lead mt-4 text-foreground"
+        >
+          {project.title}
+        </h1>
         <p className="mt-4 text-base leading-relaxed text-muted-foreground sm:text-lg">{project.description}</p>
 
         <div className="mt-6 flex flex-wrap gap-2">
@@ -89,7 +100,7 @@ export default async function ProjectDetail({
         <ul className="list-none space-y-2.5">
           {project.approach.map((a, i) => (
             <li key={i} className="flex gap-3">
-              <span className="mono shrink-0 pt-1 text-[10px] text-[color:var(--signal)]">{String(i + 1).padStart(2, "0")}</span>
+              <span className="mono shrink-0 pt-1 text-xs text-[color:var(--signal)]">{String(i + 1).padStart(2, "0")}</span>
               <span>{a}</span>
             </li>
           ))}
@@ -132,7 +143,7 @@ export default async function ProjectDetail({
         <div className="grid gap-3 sm:grid-cols-2">
           {[0, 1].map((i) => (
             <div key={i} className="hairline scanlines aspect-video overflow-hidden rounded-lg bg-[color:var(--surface)]">
-              <div className="flex h-full items-center justify-center text-[10px] uppercase tracking-widest text-muted-foreground mono">
+              <div className="flex h-full items-center justify-center label">
                 screenshot · {i + 1}
               </div>
             </div>
@@ -146,7 +157,7 @@ export default async function ProjectDetail({
             {related.map((w) => (
               <Link key={w.slug} href={`/writeups/${w.slug}`}
                 className="hover-lift hairline group block rounded-lg bg-[color:var(--surface)] p-4">
-                <div className="mono text-[10px] uppercase tracking-widest text-muted-foreground">{w.date}</div>
+                <div className="label">{w.date}</div>
                 <div className="mt-1.5 flex items-start justify-between gap-2">
                   <h3 className="text-sm font-medium text-foreground">{w.title}</h3>
                   <ArrowUpRight className="size-3.5 shrink-0 text-muted-foreground group-hover:text-[color:var(--signal)]" />
@@ -164,7 +175,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <Reveal>
       <section className="mt-14">
-        <h2 className="mono mb-4 text-[11px] uppercase tracking-[0.2em] text-[color:var(--signal)]/80">
+        <h2 className="label mb-4 text-[color:var(--signal)]/80">
           <span className="mr-2 h-px w-6 inline-block align-middle bg-[color:var(--signal)]/40" />
           {title}
         </h2>

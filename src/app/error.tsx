@@ -16,7 +16,7 @@ export default function Error({
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-4">
       <div className="hairline w-full max-w-xl rounded-lg bg-[color:var(--surface)] p-6 sm:p-8">
-        <div className="mono text-[11px] uppercase tracking-widest text-destructive">
+        <div className="label text-destructive">
           panic · runtime
         </div>
         <h1 className="mono mt-3 text-xl text-foreground sm:text-2xl">

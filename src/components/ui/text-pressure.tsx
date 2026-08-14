@@ -31,17 +31,16 @@ import { useEffect, useRef } from "react";
 
 type Variant = "light" | "solid";
 
-// Resting and peak positions on each axis, per line.
-const AXES: Record<Variant, { wght: [number, number]; wdth: [number, number] }> = {
-  // Normal at rest, ultra-bold under the cursor.
-  light: { wght: [300, 900], wdth: [116, 122] },
-  // Ultra-bold at rest, normal under the cursor — the inverse gesture.
-  solid: { wght: [900, 300], wdth: [120, 114] },
+// Resting and peak weight, per line. Rubik ships a weight axis and nothing
+// else, so this is the whole instrument — which is also the right one: weight
+// is what the eye reads as pressure, while a width swing scales the
+// letterforms sideways and reads as distortion rather than emphasis.
+const AXES: Record<Variant, { wght: [number, number] }> = {
+  // Light at rest, black under the cursor.
+  light: { wght: [300, 900] },
+  // Black at rest, light under the cursor — the inverse gesture.
+  solid: { wght: [900, 300] },
 };
-
-// Width moves only a few units. Weight is what the eye reads as pressure;
-// swinging wdth across its full range scales the letterforms sideways, which
-// reads as distortion rather than emphasis.
 
 export function TextPressure({
   text,
@@ -61,7 +60,7 @@ export function TextPressure({
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     if (!window.matchMedia("(pointer: fine)").matches) return;
 
-    const { wght, wdth } = AXES[variant];
+    const { wght } = AXES[variant];
     const cursor = { x: -9999, y: -9999 };
     const eased = { x: -9999, y: -9999 };
 
@@ -113,8 +112,7 @@ export function TextPressure({
         const k = 1 - t * t * (3 - 2 * t);
 
         const w = Math.round(wght[0] + (wght[1] - wght[0]) * k);
-        const wd = Math.round(wdth[0] + (wdth[1] - wdth[0]) * k);
-        span.style.fontVariationSettings = `"wght" ${w}, "wdth" ${wd}`;
+        span.style.fontVariationSettings = `"wght" ${w}`;
       }
 
       raf = requestAnimationFrame(frame);

@@ -56,7 +56,7 @@ export function Callout({
     >
       <ShieldAlert className="size-5 shrink-0" style={{ color }} />
       <div>
-        <div className="mono mb-1 text-[10px] uppercase tracking-widest" style={{ color }}>
+        <div className="label mb-1" style={{ color }}>
           {title}
         </div>
         <div className="text-muted-foreground [&>p]:mt-0">{children}</div>

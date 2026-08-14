@@ -28,7 +28,7 @@ export function WriteupsView({ writeups }: { writeups: WriteupMeta[] }) {
         <button
           onClick={() => setTag(null)}
           aria-pressed={tag === null}
-          className={`mono inline-flex min-h-8 items-center rounded-md border px-3 py-1.5 text-[11px] uppercase tracking-wider ${
+          className={`mono inline-flex min-h-8 items-center rounded-md border px-3 py-1.5 text-xs uppercase tracking-wider ${
             tag === null
               ? "border-[color:var(--signal)]/60 bg-[color:var(--signal)]/10 text-[color:var(--signal)]"
               : "border-border bg-[color:var(--surface)] text-muted-foreground hover:text-foreground"
@@ -41,7 +41,7 @@ export function WriteupsView({ writeups }: { writeups: WriteupMeta[] }) {
             key={t}
             onClick={() => setTag(t)}
             aria-pressed={tag === t}
-            className={`mono inline-flex min-h-8 items-center rounded-md border px-3 py-1.5 text-[11px] uppercase tracking-wider ${
+            className={`mono inline-flex min-h-8 items-center rounded-md border px-3 py-1.5 text-xs uppercase tracking-wider ${
               tag === t
                 ? "border-[color:var(--signal)]/60 bg-[color:var(--signal)]/10 text-[color:var(--signal)]"
                 : "border-border bg-[color:var(--surface)] text-muted-foreground hover:text-foreground"
@@ -65,12 +65,17 @@ export function WriteupsView({ writeups }: { writeups: WriteupMeta[] }) {
                 href={`/writeups/${w.slug}`}
                 className="hover-lift hairline block h-full rounded-lg bg-[color:var(--surface)] p-5"
               >
-                <div className="mono flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+                <div className="mono flex items-center gap-2 text-xs uppercase tracking-widest text-muted-foreground">
                   <time>{w.date}</time>
                   <span className="opacity-50">·</span>
                   <span>{w.readingTime}</span>
                 </div>
-                <h3 className="mt-3 text-lg font-semibold leading-snug text-foreground">{w.title}</h3>
+                <h3
+                  data-vt-name={`rec-${w.slug}`}
+                  className="display display-sub mt-3 text-foreground"
+                >
+                  {w.title}
+                </h3>
                 <p className="mt-2 text-sm text-muted-foreground">{w.excerpt}</p>
                 <div className="mt-4 flex flex-wrap gap-1.5">
                   {w.tags.map((t) => <span key={t} className="chip">{t}</span>)}
@@ -86,7 +91,7 @@ export function WriteupsView({ writeups }: { writeups: WriteupMeta[] }) {
           <span className="text-[color:var(--signal)]">$</span> grep -rl &quot;{tag}&quot; ./writeups → no matches
           <button
             onClick={() => setTag(null)}
-            className="mt-4 block w-full text-[11px] uppercase tracking-wider text-[color:var(--signal)] hover:underline"
+            className="mt-4 block w-full text-xs uppercase tracking-wider text-[color:var(--signal)] hover:underline"
           >
             clear filter
           </button>

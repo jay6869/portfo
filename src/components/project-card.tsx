@@ -26,7 +26,7 @@ export function ProjectCard({ project, index = 0 }: { project: ProjectMeta; inde
       >
         <div className="flex items-start justify-between gap-3">
           <span
-            className={`mono inline-flex items-center rounded border px-2 py-0.5 text-[10px] tracking-widest ${typeColor[project.type]}`}
+            className={`mono inline-flex items-center rounded border px-2 py-0.5 text-xs tracking-widest ${typeColor[project.type]}`}
           >
             {project.type}
           </span>
@@ -36,7 +36,12 @@ export function ProjectCard({ project, index = 0 }: { project: ProjectMeta; inde
           />
         </div>
 
-        <h3 className="mt-5 text-xl font-semibold text-foreground sm:text-2xl">
+        {/* Same morph pair as the home page rows, so a project keeps its
+            identity whichever index the visitor arrives from. */}
+        <h3
+          data-vt-name={`rec-${project.slug}`}
+          className="display display-row mt-5 text-foreground"
+        >
           {project.title}
         </h3>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">

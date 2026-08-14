@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
-import { Download, GraduationCap, Globe, MapPin } from "lucide-react";
+import { GraduationCap, Globe, MapPin } from "lucide-react";
 import { SectionHeading } from "@/components/section-heading";
 import { Reveal } from "@/components/motion-primitives";
+import { CvDownload } from "@/components/cv-download";
+import { CV_HREF, CV_DOWNLOAD_NAME, CV_SIZE } from "@/lib/cv";
 
 export const metadata: Metadata = {
   title: "About",
@@ -43,7 +45,12 @@ export default function About() {
       </dl>
 
       <Reveal>
-        <div className="prose prose-invert mt-10 max-w-none text-[15px] leading-[1.75] text-foreground/90">
+        {/* `mdx` is this site's own prose role. What was here before —
+            `prose prose-invert` plus a hand-set size and leading — reimplemented
+            it badly: the two prose classes are inert (no Tailwind typography
+            plugin in this project), and `max-w-none` inside a max-w-4xl column
+            put running text at ~97 characters a line, well past readable. */}
+        <div className="mdx mt-10 max-w-[68ch]">
           <p>
             I got into security the same way most people do — broke something I
             shouldn&apos;t have, got curious, kept going. The difference is what stuck:
@@ -57,21 +64,20 @@ export default function About() {
             embedded-systems knowledge to do meaningful WiFi and IoT research.
           </p>
           <p>
-            I&apos;m looking for an internship where I can work on real targets with
-            people who care about doing it well. I&apos;m happy with red, blue, or
-            purple — what matters is the people and the work.
+            My focus is penetration testing, security analysis, and SOC work —
+            real targets, with people who care about doing it well. I&apos;m happy
+            with red, blue, or purple; what matters is the people and the work.
           </p>
         </div>
       </Reveal>
 
       <Reveal>
-        <a
-          href="/janith-godage-cv.pdf"
-          download="Janith-Godage-CV.pdf"
-          className="mono mt-8 inline-flex items-center gap-2 rounded-md bg-[color:var(--signal)] px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-black shadow-[0_0_30px_-6px_var(--signal)] hover:shadow-[0_0_40px_-4px_var(--signal)]"
-        >
-          <Download className="size-3.5" /> download cv · pdf
-        </a>
+        <CvDownload
+          className="mt-8"
+          href={CV_HREF}
+          filename={CV_DOWNLOAD_NAME}
+          size={CV_SIZE}
+        />
       </Reveal>
 
     </div>

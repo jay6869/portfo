@@ -61,11 +61,11 @@ export default async function CheatsheetDetail({
             <span className="size-2.5 rounded-full bg-[#ff5f56]/70" />
             <span className="size-2.5 rounded-full bg-[#ffbd2e]/70" />
             <span className="size-2.5 rounded-full bg-[#27c93f]/70" />
-            <span className="mono ml-2 truncate text-[11px] text-muted-foreground">{slug}.sheet</span>
-            <span className="mono ml-auto shrink-0 text-[10px] text-[color:var(--signal)]/70">{sheet.sections} §</span>
+            <span className="mono ml-2 truncate text-xs text-muted-foreground">{slug}.sheet</span>
+            <span className="label ml-auto shrink-0 text-[color:var(--signal)]/70">{sheet.sections} §</span>
           </div>
           <div className="px-5 py-5 sm:px-6">
-            <div className="mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            <div className="label">
               cheat sheet · {sheet.date}
             </div>
             <h1 className="mt-2 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{sheet.title}</h1>

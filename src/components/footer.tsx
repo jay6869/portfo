@@ -8,7 +8,7 @@ export function Footer() {
             computed to 3.12:1, under AA. The token alone measures 6.9:1. */}
         <div className="mono text-xs text-muted-foreground">
           <span className="text-[color:var(--signal)]/80">$</span> echo &quot;built with care · secured by default&quot;
-          <div className="mt-1 text-[11px]">
+          <div className="mt-1 text-xs">
             © {new Date().getFullYear()} Janith Godage · all rights reserved
           </div>
         </div>

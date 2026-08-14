@@ -30,7 +30,7 @@ export function ProjectsView({ projects }: { projects: ProjectMeta[] }) {
               key={f}
               onClick={() => setFilter(f)}
               aria-pressed={active}
-              className={`mono inline-flex min-h-8 items-center rounded-md border px-3 py-1.5 text-[11px] uppercase tracking-wider transition-all ${
+              className={`mono inline-flex min-h-8 items-center rounded-md border px-3 py-1.5 text-xs uppercase tracking-wider transition-all ${
                 active
                   ? "border-[color:var(--signal)]/60 bg-[color:var(--signal)]/10 text-[color:var(--signal)] shadow-[0_0_18px_-6px_var(--signal)]"
                   : "border-border bg-[color:var(--surface)] text-muted-foreground hover:border-[color:var(--signal)]/40 hover:text-foreground"
@@ -62,7 +62,7 @@ export function ProjectsView({ projects }: { projects: ProjectMeta[] }) {
           <span className="text-[color:var(--signal)]">$</span> grep -r &quot;{filter}&quot; ./projects → no matches
           <button
             onClick={() => setFilter("All")}
-            className="mt-4 block w-full text-[11px] uppercase tracking-wider text-[color:var(--signal)] hover:underline"
+            className="mt-4 block w-full text-xs uppercase tracking-wider text-[color:var(--signal)] hover:underline"
           >
             clear filter
           </button>

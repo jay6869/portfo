@@ -56,12 +56,18 @@ export default async function WriteupDetail({
       </Link>
 
       <Reveal>
-        <div className="mono mt-6 flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+        <div className="mono mt-6 flex items-center gap-2 text-xs uppercase tracking-widest text-muted-foreground">
           <time>{writeup.date}</time>
           <span className="opacity-50">·</span>
           <span>{writeup.readingTime}</span>
         </div>
-        <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{writeup.title}</h1>
+        {/* Paired with the index row — see the project detail page. */}
+        <h1
+          style={{ viewTransitionName: `rec-${writeup.slug}` }}
+          className="display display-lead mt-3 text-foreground"
+        >
+          {writeup.title}
+        </h1>
         <div className="mt-4 flex flex-wrap gap-1.5">
           {writeup.tags.map((t) => <span key={t} className="chip">{t}</span>)}
         </div>
@@ -83,7 +89,7 @@ export default async function WriteupDetail({
       {related.length > 0 && (
         <Reveal>
           <section className="mt-16 border-t border-border pt-10">
-            <h2 className="mono mb-4 text-[11px] uppercase tracking-[0.2em] text-[color:var(--signal)]/80">
+            <h2 className="label mb-4 text-[color:var(--signal)]/80">
               <span className="mr-2 inline-block h-px w-6 align-middle bg-[color:var(--signal)]/40" />
               related projects
             </h2>
@@ -91,7 +97,7 @@ export default async function WriteupDetail({
               {related.map((p) => (
                 <Link key={p.slug} href={`/projects/${p.slug}`}
                   className="hover-lift hairline group block rounded-lg bg-[color:var(--surface)] p-4">
-                  <div className="mono text-[10px] uppercase tracking-widest text-muted-foreground">{p.type}</div>
+                  <div className="label">{p.type}</div>
                   <div className="mt-1.5 flex items-start justify-between gap-2">
                     <h3 className="text-sm font-medium text-foreground">{p.title}</h3>
                     <ArrowUpRight className="size-3.5 shrink-0 text-muted-foreground group-hover:text-[color:var(--signal)]" />

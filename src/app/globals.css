@@ -35,13 +35,37 @@
   --color-warn: var(--warn);
   --color-info: var(--info);
 
-  /* Wired to next/font variables (set in app/layout.tsx). Fallbacks preserve
-     the original stack if the font vars are ever absent. */
-  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-display: var(--font-display-sans), ui-sans-serif, system-ui, sans-serif;
-  /* Body copy is monospace too — the terminal voice is the brand, and a
-     proportional sans in running text read as a different site. */
-  --font-sans: var(--font-jetbrains-mono), ui-monospace, monospace;
+  /* One webfont, wired to next/font (app/layout.tsx). Display and body are the
+     same family at different weights; the mono stack is system-only and loads
+     nothing, so it costs a metadata register without a download. */
+  --font-display: var(--font-rubik), system-ui, sans-serif;
+  --font-sans: var(--font-rubik), system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+}
+
+/* ---------- Type scale ----------
+   Every step below is a fluid clamp with its own line height, tightening as it
+   grows: 1.55 at body, 1 at row titles, 0.84 at display. A single ratio applied
+   across that range leaves the big sizes airy and the small ones cramped. */
+@theme inline {
+  /* Band only — full-bleed marquee type, meant to run off both edges. */
+  --text-display-xl: clamp(4.5rem, 1rem + 19vw, 19rem);
+  /* The hero name. Below the band, not level with it: the reference's own hero
+     is a short word, where this one is two six-letter lines that have to sit
+     inside the composition rather than blow through it. */
+  --text-hero: clamp(2.5rem, 9vw, 10.5rem);
+  --text-h2: clamp(3rem, 1rem + 7.5vw, 8.25rem);
+  /* Record titles. The reference caps this at 4.25rem, which works for their
+     longest title at 26 characters; the longest here is 57, so the same ceiling
+     produced three wrapped lines of shouting type. Sized against real content. */
+  --text-h3: clamp(1.5rem, 1rem + 1.9vw, 2.5rem);
+  --text-display-sm: clamp(1.25rem, 0.9rem + 1.2vw, 1.85rem);
+  --text-lead: clamp(1.05rem, 0.82rem + 1.05vw, 1.75rem);
+  --text-body: clamp(0.875rem, 0.85rem + 0.12vw, 1rem);
+
+  --tracking-tight: -0.025em;
+  --tracking-wide: 0.025em;
 }
 
 :root {
@@ -85,6 +109,15 @@
   --glow-signal: 0 0 0 1px color-mix(in oklab, var(--signal) 50%, transparent),
                  0 0 24px -4px color-mix(in oklab, var(--signal) 50%, transparent);
   --glow-signal-soft: 0 0 32px -8px color-mix(in oklab, var(--signal) 40%, transparent);
+
+  /* The dotted rule, defined once. It was written out verbatim in seven
+     places, so a change to dot size or pitch meant seven edits and any missed
+     one drifted silently. */
+  --rule-dots: repeating-linear-gradient(
+    to right,
+    color-mix(in oklab, var(--muted-foreground) 62%, transparent) 0 2px,
+    transparent 2px 7px
+  );
 }
 
 .dark { color-scheme: dark; }
@@ -118,7 +151,12 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: var(--font-mono);
+    /* Running text is the display family at regular weight, not the mono. The
+       mono register is now reserved for what it is actually for: labels,
+       identifiers, timestamps and the telemetry bar — data, not prose. */
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
@@ -181,7 +219,7 @@
   border: 1px solid var(--border);
   border-radius: .375rem;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 0.6875rem;
   letter-spacing: .02em;
   color: oklch(0.78 0.01 180);
   background: #171717;
@@ -217,45 +255,74 @@
    everything supporting them runs tiny, tracked-out, and uppercase. The gap
    between those two registers is the design. */
 
-/* Headings and marquees run in the extended display face. The width axis is
-   pushed toward the top of its range so the type is genuinely wide by design
-   rather than scaled sideways. */
+/* Rubik carries no width axis, so weight alone does the work: 900 everywhere
+   in the display register, with tracking pulled tighter as the size grows.
+   Case is NOT set here. Record titles are sentences — "From Dummy to SYSTEM:
+   UAC Bypass and Privilege Escalation" — and forcing them uppercase both cost
+   about 15% width and stripped the word shapes a reader scans by. The three
+   places that genuinely want caps set it themselves. */
 @utility display {
   font-family: var(--font-display);
-  font-weight: 800;
-  font-variation-settings: "wdth" 112;
-  font-stretch: 112%;
+  font-weight: 900;
+  letter-spacing: var(--tracking-tight);
+  line-height: 1;
+}
+
+@utility display-hero {
+  font-size: var(--text-hero);
+  line-height: 0.84;
   letter-spacing: -0.035em;
-  line-height: 0.86;
+}
+@utility display-band {
+  font-size: var(--text-display-xl);
+  line-height: 0.84;
+}
+
+/* Section statements — short, set as declarations, so caps suit them. */
+@utility display-section {
+  font-size: var(--text-h2);
+  line-height: 0.95;
   text-transform: uppercase;
 }
 
-/* The hero name. Fluid from a phone to an ultrawide without a breakpoint. */
-/* Sized against the heavier line, which is always the wider of the two. With
-   the width axis back at natural proportions the type can run considerably
-   larger than it could when it was being stretched. */
-@utility display-hero {
-  font-size: clamp(2.5rem, 10.5vw, 12.5rem);
-}
-
-/* Section titles: still huge, one step under the name. */
-@utility display-section {
-  font-size: clamp(2.1rem, 7.5vw, 5.5rem);
-}
-
-/* Band scale — for full-bleed marquee type only. Deliberately larger than the
-   hero: the band is meant to run off both edges and never be read whole. */
-@utility display-band {
-  font-size: clamp(3.5rem, 17vw, 17rem);
-}
-
-/* The small register. Every label, index, and meta line on the site. */
+/* The small register. Every label, index, and meta line on the site — 12px at
+   0.18em in the mono stack, at medium rather than regular so it holds its
+   colour against the display weights it sits beside.
+   Sized in rem, not px: this is the smallest type here, so it is exactly the
+   role a reader who raised their browser's default font size needs to grow.
+   A px value ignores that setting entirely (WCAG 1.4.4). */
 @utility label {
   font-family: var(--font-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.24em;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
   color: var(--muted-foreground);
+}
+
+/* ---------- Row registers ----------
+   Between a section heading and body copy the page repeats three title sizes,
+   and only three. They were previously written as six near-identical arbitrary
+   clamps whose differences (1.05 vs 1.15 vs 1.2rem) were drift, not hierarchy —
+   too close to read as separate levels, far enough apart to look unaligned. */
+
+/* Lead — every record title, on the plates the lists are built from. */
+@utility display-lead {
+  font-size: var(--text-h3);
+  line-height: 1;
+}
+
+/* Row — the ordinary repeated title: index pages, about entries. */
+@utility display-row {
+  font-size: var(--text-display-sm);
+  line-height: 1.05;
+}
+
+/* Sub — dense entries and in-band subheadings, one step below Row. */
+@utility display-sub {
+  font-size: clamp(1rem, 0.92rem + 0.4vw, 1.25rem);
+  line-height: 1.3;
 }
 
 /* Outlined type — the hollow counterpart to the solid display line.
@@ -283,59 +350,86 @@
 }
 
 /* Project rows: full-bleed lines that light as the cursor crosses them. */
+/* ---------- Record blocks ----------
+   Every list on the site — work, writeups, credentials — is one of these.
+   A rounded plate on the raised surface, a fixed meta column, the title at
+   full display scale, and an action parked at the far edge.
+
+   Hover does not tint the plate, it TAKES it: the accent wipes across from the
+   left and every piece of type inside flips to black. The wipe is the site's
+   existing scan gesture carried to its conclusion — same direction, same
+   curve, but it arrives at a solid fill instead of a hairline. */
+.row-stack {
+  display: grid;
+  gap: 1rem;
+}
+
 .row-link {
   position: relative;
   display: block;
-  border-top: 1px solid var(--border);
-  transition: background-color 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  background: var(--surface);
+  padding: clamp(1.5rem, 2.6vw, 2.25rem) clamp(1.25rem, 2.4vw, 2.5rem);
+  transition: color 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
-.row-link:last-of-type { border-bottom: 1px solid var(--border); }
+
 .row-link::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    90deg,
-    color-mix(in oklab, var(--signal) 9%, transparent),
-    transparent 62%
-  );
-  opacity: 0;
-  transition: opacity 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
-  pointer-events: none;
-}
-.row-link:hover::before,
-.row-link:focus-visible::before { opacity: 1; }
-
-/* A scan line that wipes across the row on hover — the domain's own gesture. */
-.row-link::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -1px;
-  height: 1px;
-  width: 100%;
+  z-index: -1;
   background: var(--signal);
-  box-shadow: 0 0 12px var(--signal);
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition: transform 0.55s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
-.row-link:hover::after,
-.row-link:focus-visible::after { transform: scaleX(1); }
+.row-link:hover::before,
+.row-link:focus-visible::before { transform: scaleX(1); }
 
-.row-title {
-  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1), color 0.3s;
+/* :where() keeps this at the specificity of `.row-link:hover` alone, which is
+   still one class more than the Tailwind colour utilities it has to beat —
+   so no !important is needed anywhere. */
+.row-link:hover,
+.row-link:focus-visible { color: #000; }
+.row-link:is(:hover, :focus-visible)
+  :where(.row-title, .label, .cred-id, .row-cta, p, span, time, dt, dd) {
+  color: #000;
 }
-.row-link:hover .row-title,
-.row-link:focus-visible .row-title {
-  transform: translateX(clamp(0.5rem, 1.6vw, 1.6rem));
-  color: var(--signal);
+/* The seal draws in stroke and fill, not color, so it needs its own flip. */
+.row-link:is(:hover, :focus-visible) .seal-edge { stroke: color-mix(in oklab, #000 40%, transparent); }
+.row-link:is(:hover, :focus-visible) .seal-text { fill: #000; }
+.row-link:is(:hover, :focus-visible) .seal-mark { color: #000; }
+
+/* The block's internal grid. The meta column is a fixed measure so the titles
+   of every row start on the same vertical, whatever their metadata says. */
+.row-body {
+  display: grid;
+  gap: 1.25rem;
 }
+@media (min-width: 768px) {
+  .row-body {
+    grid-template-columns: 10rem minmax(0, 1fr) auto;
+    gap: 2rem;
+    align-items: start;
+  }
+}
+.row-meta {
+  display: grid;
+  gap: 0.4rem;
+  align-content: start;
+}
+.row-desc {
+  max-width: 38ch;
+  margin-top: 1.1rem;
+}
+
+.row-title { transition: color 0.3s; }
 
 @media (prefers-reduced-motion: reduce) {
-  .row-link::after { transition: none; }
+  .row-link::before { transition: none; }
   .row-title { transition: none; }
-  .row-link:hover .row-title { transform: none; }
 }
 
 /* Scroll-scrubbed marquee: a band of repeated type that travels horizontally in
@@ -365,27 +459,107 @@
   display: flex;
   align-items: center;
   width: max-content;
-  will-change: transform;
+  /* The resting position for every band, and the only one it ever has without
+     scripting or under reduced motion. Starting at zero would put the first
+     repeat flush to the left margin, which reads as a phrase with a beginning
+     — the one thing these bands are not. Parked here, it is a strip caught
+     mid-pass. Motion overrides this inline; will-change is set by the same
+     code, so bands that never move never get a compositor layer. */
+  transform: translate3d(-7%, 0, 0);
 }
 
+/* The band is the one place the type is the artwork rather than a label for
+   something else. Rubik has only a weight axis, so the width the reference gets
+   here comes from the face's own Black proportions plus tight tracking — not
+   from stretching, which is what a wdth push would have been on a face that
+   does not carry the axis.
+
+   Unlayered, so it outranks the `display` utility without depending on the
+   order Tailwind happens to emit its utilities in. */
 .scrub-marquee-item {
   white-space: nowrap;
   padding-inline-end: 0.28em;
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  text-transform: uppercase;
 }
 
-/* Marquee: the toolchain, running as a continuous band. */
-.marquee {
+/* ---------- Toolchain band ----------
+   A paper-coloured strip cut into the dark page — the one surface inversion on
+   the site. Its colours are fixed rather than tokenised on purpose: this band
+   must stay light through all five accent themes, because its job is to be the
+   place the page opens up, and the brand marks it carries are drawn to be read
+   as dark artwork on light. */
+.tool-band {
+  --tool-ink: #121212;
+  background: #ebe9e6;
+  color: var(--tool-ink);
+  /* Deep enough that the strip reads as a room the page opens into rather than
+     a rule with logos on it — roughly 300px at desktop, matching the depth the
+     reference gives its own logo wall. */
+  padding-block: clamp(2.75rem, 5.2vw, 4.5rem);
+  overflow: hidden;
+}
+
+.tool-band-note {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-style: italic;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-align: center;
+  color: color-mix(in oklab, var(--tool-ink) 62%, #ebe9e6);
+  /* The caption sits well clear of the row. Close in, the two read as one
+     block; separated, the caption introduces and the logos answer. */
+  margin-bottom: clamp(2.5rem, 4.6vw, 4.25rem);
+  padding-inline: 1.25rem;
+}
+
+.tool-band-viewport { overflow: hidden; }
+
+.tool-band-track {
   display: flex;
+  align-items: center;
   width: max-content;
-  animation: marquee-scroll 44s linear infinite;
+  will-change: transform;
 }
-.marquee:hover { animation-play-state: paused; }
-@keyframes marquee-scroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+
+.tool-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex: none;
 }
-@media (prefers-reduced-motion: reduce) {
-  .marquee { animation: none; }
+
+/* Sized against the reference's roundels — about 56px at desktop, so the mark
+   carries the lockup and the name reads as its wordmark rather than the other
+   way round. */
+.tool-mark {
+  width: clamp(2.1rem, 3.6vw, 3.5rem);
+  height: clamp(2.1rem, 3.6vw, 3.5rem);
+  flex: none;
+}
+
+.tool-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.2rem, 2.2vw, 2rem);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+/* Separator between entries, matching the reference's dot rhythm. Margin, not
+   gap, so the space belongs to the divider rather than the logo beside it. */
+.tool-sep {
+  width: 0.3rem;
+  height: 0.3rem;
+  flex: none;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--tool-ink) 30%, #ebe9e6);
+  /* Grows with the logos it separates, so the row keeps its rhythm rather than
+     bunching up as the marks get larger. */
+  margin-inline: clamp(2.25rem, 4.4vw, 4.25rem);
 }
 
 /* The CV command block — the site's conversion element.
@@ -444,7 +618,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 11px;
+  font-size: 0.6875rem;
   letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--signal);
@@ -472,21 +646,13 @@
    the separator between record rows. */
 @utility dotted-rule {
   height: 1px;
-  background-image: repeating-linear-gradient(
-    to right,
-    color-mix(in oklab, var(--muted-foreground) 62%, transparent) 0 2px,
-    transparent 2px 7px
-  );
+  background-image: var(--rule-dots);
 }
 
 /* Form fields carry the same dotted rule as the record rows, drawn as a
    background so it sits under the text without a border box. */
 .field-dotted {
-  background-image: repeating-linear-gradient(
-    to right,
-    color-mix(in oklab, var(--muted-foreground) 62%, transparent) 0 2px,
-    transparent 2px 7px
-  );
+  background-image: var(--rule-dots);
   background-repeat: no-repeat;
   background-position: left bottom;
   background-size: 100% 1px;
@@ -550,11 +716,7 @@
   position: absolute;
   inset-inline: 0;
   height: 1px;
-  background-image: repeating-linear-gradient(
-    to right,
-    color-mix(in oklab, var(--muted-foreground) 62%, transparent) 0 2px,
-    transparent 2px 7px
-  );
+  background-image: var(--rule-dots);
   transform: scaleX(var(--rule-x, 1));
   transform-origin: left;
 }
@@ -623,11 +785,7 @@
   position: absolute;
   inset-inline: 0;
   height: 1px;
-  background-image: repeating-linear-gradient(
-    to right,
-    color-mix(in oklab, var(--muted-foreground) 62%, transparent) 0 2px,
-    transparent 2px 7px
-  );
+  background-image: var(--rule-dots);
   /* The rule draws itself left-to-right as the row arrives. Defaults to 1 so
      it is fully present with JS off — the animation only ever removes it
      briefly, never gates it. */
@@ -759,16 +917,16 @@
   will-change: font-variation-settings;
 }
 
-/* Width stays near 100 on both lines. The reference sets its two lines in the
-   same face at natural proportions and lets WEIGHT alone carry the contrast;
-   driving the wdth axis to 142 literally scales the glyphs sideways, which is
-   what read as stretched. The axis still moves, but only enough to feel alive. */
+/* Weight alone carries the contrast between the two lines — Rubik's only axis,
+   and the right one anyway: pushing width literally scales the glyphs
+   sideways, which is what read as stretched when the old face had that axis.
+   300 against 900 is the full range the variable font ships. */
 .pressure--light > span {
-  font-variation-settings: "wght" 300, "wdth" 116;
+  font-variation-settings: "wght" 300;
   color: var(--foreground);
 }
 .pressure--solid > span {
-  font-variation-settings: "wght" 900, "wdth" 120;
+  font-variation-settings: "wght" 900;
   color: var(--signal);
 }
 
@@ -793,7 +951,7 @@
    match the terminal code-block aesthetic. */
 
 .mdx {
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.75;
   color: color-mix(in oklab, var(--foreground) 90%, transparent);
 }
@@ -865,7 +1023,7 @@
   background: var(--surface-2);
   padding: 0.5rem 0.85rem;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: var(--muted-foreground);
 }
 
@@ -873,7 +1031,7 @@
   overflow-x: auto;
   padding: 1rem;
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: 0.78rem;
   line-height: 1.6;
   background: var(--surface);
 }
@@ -925,7 +1083,7 @@
   backdrop-filter: blur(10px);
   border-top: 1px solid var(--border);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.625rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
@@ -953,6 +1111,9 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  /* 24px floor: WCAG 2.2 SC 2.5.8 minimum target size. At 10px type with
+     0.25rem padding this control measured 20px and failed. */
+  min-height: 24px;
   padding: 0.25rem 0.4rem;
   margin: -0.25rem -0.4rem;
   border-radius: 0.25rem;
@@ -974,7 +1135,172 @@ body { padding-bottom: 2.25rem; }
 /* Below 640px the centre readout is the first thing to go — the two live
    numbers and the accent control are what earn their place. */
 @media (max-width: 639px) {
-  .hud { font-size: 9px; letter-spacing: 0.12em; gap: 0.75rem; }
+  .hud { font-size: 0.625rem; letter-spacing: 0.1em; gap: 0.7rem; }
   .hud-center { display: none; }
   .hud-side { gap: 0.85rem; }
 }
+
+/* ---------- Voice: facts and the ask ---------- */
+
+/* Quick facts. Rows, not cards — a grid of bordered boxes is the lazy
+   container the craft floor warns about, and these are four short pairs. */
+.quick-facts { display: grid; gap: 0.85rem; }
+.quick-fact {
+  display: grid;
+  grid-template-columns: auto 6.5rem 1fr;
+  align-items: center;
+  gap: 0.75rem;
+}
+@media (max-width: 479px) {
+  .quick-fact { grid-template-columns: auto 1fr; }
+  .quick-fact dd { grid-column: 2; }
+}
+
+/* ---------- Credential seal ----------
+   The stamp that gives the credentials band its own identity. Ring text in the
+   site's mono voice, ring geometry in hairlines matching every other rule on
+   the page. No fill, no plate, no badge: it sits directly on the ground like
+   an impression rather than a sticker. */
+.seal {
+  position: relative;
+  display: block;
+  flex: none;
+  width: clamp(4rem, 9vw, 5.75rem);
+  aspect-ratio: 1;
+}
+.seal-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  /* Scrubbed from the section's passage through the viewport by
+     ScrollChoreography. The resting value matters: with scripting off, or
+     under reduced motion, the seal simply sits at this angle — struck once and
+     left there, which is what a stamp does anyway. */
+  transform: rotate(var(--seal-turn, -8deg));
+}
+.seal-edge {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 1;
+}
+.seal-edge--inner { stroke-dasharray: 2 5; }
+.seal-text {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.02em;
+  fill: var(--muted-foreground);
+}
+/* The struck state. Everything that changes here is the same accent the rest
+   of the page uses for "this is real" — nothing new enters the palette. */
+.seal--struck .seal-edge {
+  stroke: color-mix(in oklab, var(--signal) 45%, transparent);
+}
+.seal--struck .seal-text { fill: var(--signal); }
+.seal-mark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 28%;
+  height: 28%;
+  translate: -50% -50%;
+  color: var(--signal);
+}
+
+/* Credential IDs sit in the label row but are identifiers, not labels. The
+   label role uppercases and tracks out 0.24em, which is wrong twice here: the
+   strings are case-sensitive, and 0.24em pushes a 36-character UUID past the
+   width of a phone. Reads as a key fingerprint instead — the idiom this
+   section's audience already uses for exactly this kind of string. */
+.cred-id {
+  text-transform: none;
+  letter-spacing: 0.04em;
+  color: var(--foreground);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Cross-route morph ----------
+   View-transition pseudo-elements live in their own tree, so the global
+   prefers-reduced-motion rule above (which targets *, ::before, ::after)
+   cannot reach them. It does not need to: ViewTransitions never starts a
+   transition under reduced motion, so none of this is ever constructed.
+
+   The discipline here is that only ONE thing moves. The heading travels and
+   resizes between the two routes; the rest of the page does nothing but
+   cross-fade beneath it. Giving the root its own slide would put two motions
+   in competition and turn a shared element into confetti. */
+
+/* Every group — the morphing heading included — rides the same expo-out curve
+   the GSAP choreography uses, so a route change belongs to the same hand as
+   the scroll reveals. */
+::view-transition-group(*) {
+  animation-duration: 460ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* The outgoing page leaves faster than the new one arrives, so the incoming
+   route is already resolving while the old one clears rather than the two
+   sitting at half opacity together in the middle. */
+::view-transition-old(root) {
+  animation: vt-root-out 180ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+::view-transition-new(root) {
+  animation: vt-root-in 340ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes vt-root-out { to { opacity: 0; } }
+@keyframes vt-root-in { from { opacity: 0; } }
+
+/* CV download. The meta line sits beside the control on a wide row and under
+   it when the row runs out of width, so the confirmation never pushes the
+   button off-grid on a phone. */
+.cv-dl {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.1rem;
+}
+.cv-dl-meta {
+  color: var(--muted-foreground);
+  /* The two strings are different lengths; reserving the taller of the two
+     stops the row from jumping when the label swaps. */
+  min-height: 1em;
+}
+
+/* The one beat of motion this page spends on a confirmation: the check
+   arrives rather than appearing. The global reduced-motion rule already
+   collapses this to nothing. */
+.cv-dl-check { animation: cv-check 0.32s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes cv-check {
+  from { transform: scale(0.4); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+/* The ask, stated once and plainly. */
+.contact-ask {
+  max-width: 34ch;
+  font-size: clamp(1.05rem, 2vw, 1.5rem);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--foreground);
+}
+
+/* About lede — the human sentence, set larger than the copy beneath it. */
+.about-lede {
+  font-size: clamp(1.05rem, 2vw, 1.45rem);
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  color: var(--foreground);
+}
+
+/* Row CTA. Now permanently visible: on a plate this size the action is part of
+   the composition — the top-right anchor that balances the meta column — not a
+   hover reward. It was hidden when rows were hairline-separated and it had
+   nowhere of its own to sit. */
+.row-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+  transition: gap 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.row-link:hover .row-cta,
+.row-link:focus-visible .row-cta { gap: 0.75rem; }

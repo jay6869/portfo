@@ -1,30 +1,28 @@
 import type { Metadata, Viewport } from "next";
-import { JetBrains_Mono, Archivo } from "next/font/google";
+import { Rubik } from "next/font/google";
 import "./globals.css";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
-import { PageTransition } from "@/components/page-transition";
+import { ViewTransitions } from "@/components/view-transitions";
 import { Providers } from "@/components/providers";
 import { Hud } from "@/components/hud";
 import { SITE, SITE_URL } from "@/lib/site";
 
-// Display face: Archivo, requested with its width axis so headings can run
-// genuinely extended rather than being scaled sideways. wght 100-900 gives the
-// hero its light/black contrast, and wdth 62-125 the extended setting used for
-// every marquee and heading.
-const archivo = Archivo({
+// One family, display through body: Rubik Variable on its weight axis, plus
+// italic. This replaces the previous Archivo + JetBrains Mono pairing, which
+// cost two webfont downloads to do what one does here.
+//
+// No `weight` loads the variable font as a single file spanning 300-900 —
+// which this site needs end to end, from the 300 of the hero's light line to
+// the 900 of every heading and marquee.
+//
+// Rubik has NO width axis. The old display face did, and the type system leaned
+// on it; every `font-variation-settings: "wdth" …` has been removed rather than
+// left to fail silently, and weight alone now carries the contrast.
+const rubik = Rubik({
   subsets: ["latin"],
-  axes: ["wdth"],
-  variable: "--font-display-sans",
-  display: "swap",
-});
-
-// Body and UI voice. No `weight` array loads the VARIABLE font as one file,
-// which the display type needs anyway — it asks for 700, and the old static
-// set never loaded it, so browsers were faking synthetic bold.
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-jetbrains-mono",
+  style: ["normal", "italic"],
+  variable: "--font-rubik",
   display: "swap",
 });
 
@@ -78,7 +76,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`dark ${jetbrainsMono.variable} ${archivo.variable}`}
+      className={`dark ${rubik.variable}`}
     >
       <body>
         {/* Direction contract, emitted as a real HTML comment so it survives the
@@ -142,7 +140,7 @@ finish review, the verdict, and DESIGN.md
         <Providers>
           <Nav />
           <main id="main" className="min-h-[calc(100vh-3.5rem)]">
-            <PageTransition>{children}</PageTransition>
+            <ViewTransitions>{children}</ViewTransitions>
           </main>
           <Footer />
           <Hud />
