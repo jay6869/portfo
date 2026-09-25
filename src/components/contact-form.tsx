@@ -152,11 +152,11 @@ export function ContactForm() {
               having it appear mid-announcement and get missed. */}
           <p role="status" aria-live="polite" className="label empty:hidden">
             {status === "sent" && (
-              <span className="text-[color:var(--signal)]">Got it — reply within 48h</span>
+              <span className="text-[color:var(--signal)]">Sent. I&apos;ll get back to you soon</span>
             )}
             {status === "error" && (
               <span className="text-destructive">
-                {blocked ? "Form script blocked" : "Send failed"} — email me directly
+                {blocked ? "The form didn't load" : "That didn't send"}. Try email instead
               </span>
             )}
           </p>
@@ -164,7 +164,7 @@ export function ContactForm() {
       </form>
 
       <p className="label mt-7 text-muted-foreground">
-        Or write direct to{" "}
+        Or email me at{" "}
         <a
           href="mailto:janithzgodage@gmail.com"
           className="text-[color:var(--signal)] hover:underline"

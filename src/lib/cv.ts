@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { CV_FILE } from "./cv-meta";
 
 /**
  * The CV, described once.
@@ -7,13 +8,11 @@ import path from "node:path";
  * Both the home page and /about link this file; they previously repeated the
  * path and the download name, so a rename would have half-broken the site.
  *
- * Server-only — it reads the filesystem. Client components take `CV_SIZE` as a
- * prop rather than importing this module.
+ * Server-only — it reads the filesystem. Client components import the path
+ * from `cv-meta` and take `CV_SIZE` as a prop.
  */
 
-export const CV_FILE = "janith-godage-cv.pdf";
-export const CV_HREF = `/${CV_FILE}`;
-export const CV_DOWNLOAD_NAME = "Janith-Godage-CV.pdf";
+export { CV_FILE, CV_HREF, CV_DOWNLOAD_NAME } from "./cv-meta";
 
 /**
  * Measured off disk at build time, never hand-written. Stating a size is only

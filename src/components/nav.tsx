@@ -3,14 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Download, Menu, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { CV_HREF, CV_DOWNLOAD_NAME } from "@/lib/cv-meta";
 
 // `contact` is a section of the home page, not a route of its own. Linking to
 // the fragment means it scrolls when you are already home and navigates-then-
-// scrolls from anywhere else, with no extra JS.
+// scrolls from anywhere else, with no extra JS. There is no "home" entry: the
+// mark on the left is the way home, as it is on most sites.
 const links = [
-  { to: "/", label: "home" },
   { to: "/projects", label: "projects" },
   { to: "/writeups", label: "writeups" },
   { to: "/cheatsheets", label: "cheatsheets" },
@@ -63,15 +64,19 @@ export function Nav() {
       }`}
     >
       <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" className="mono group inline-flex items-center gap-2 text-sm">
-          <span className="size-1.5 rounded-full bg-[color:var(--signal)] shadow-[0_0_10px_var(--signal)]" />
-          <span className="text-foreground">janith</span>
-          <span className="text-muted-foreground">@</span>
-          <span className="text-muted-foreground group-hover:text-foreground transition-colors">portfolio</span>
-          <span className="text-[color:var(--signal)]">:~$</span>
+        {/* The mark repeats the hero's move at badge size: one solid letter,
+            one outlined, the same pairing the marquee bands alternate. */}
+        <Link href="/" className="group inline-flex items-center gap-3" aria-label="Janith Godage — home">
+          <span className="brand-mark" aria-hidden>
+            J<span className="display-outline">G</span>
+          </span>
+          {/* Dropped between md and lg, where the link row needs the room. */}
+          <span className="label hidden whitespace-nowrap text-foreground transition-colors group-hover:text-[color:var(--signal)] sm:inline md:hidden lg:inline">
+            Janith Godage
+          </span>
         </Link>
 
-        <div className="hidden items-center gap-1 md:flex">
+        <div className="ml-auto hidden items-center gap-1 md:flex">
           {links.map((l) => {
             const active = isActive(l.to, pathname);
             return (
@@ -79,9 +84,10 @@ export function Nav() {
                 key={l.to}
                 href={l.to}
                 aria-current={active ? "page" : undefined}
-                className="mono group relative px-3 py-2 text-xs uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
+                className={`label relative px-3 py-2 transition-colors hover:text-foreground ${
+                  active ? "text-[color:var(--signal)]" : "text-muted-foreground"
+                }`}
               >
-                <span className="text-[color:var(--signal)]/70 mr-1">{active ? "▸" : "·"}</span>
                 {l.label}
                 <span
                   className={`pointer-events-none absolute inset-x-3 -bottom-px h-px bg-[color:var(--signal)] transition-all ${
@@ -93,13 +99,23 @@ export function Nav() {
           })}
         </div>
 
+        <a
+          href={CV_HREF}
+          download={CV_DOWNLOAD_NAME}
+          className="nav-cv label ml-auto md:ml-4"
+        >
+          <Download className="size-3.5" aria-hidden />
+          <span className="lg:hidden">CV</span>
+          <span className="hidden lg:inline">Download CV</span>
+        </a>
+
         <button
           ref={toggleRef}
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
           aria-controls="mobile-nav"
           onClick={() => setOpen((o) => !o)}
-          className="hairline inline-flex size-11 items-center justify-center rounded-md md:hidden"
+          className="hairline ml-2 inline-flex size-11 items-center justify-center rounded-md md:hidden"
         >
           {open ? <X className="size-4" /> : <Menu className="size-4" />}
         </button>
@@ -123,9 +139,10 @@ export function Nav() {
                     key={l.to}
                     href={l.to}
                     aria-current={active ? "page" : undefined}
-                    className="mono flex items-center gap-2 rounded-md px-3 py-3 text-sm text-muted-foreground hover:bg-[color:var(--surface)] hover:text-foreground"
+                    className={`label flex items-center rounded-md px-3 py-3.5 hover:bg-[color:var(--surface)] hover:text-foreground ${
+                      active ? "text-[color:var(--signal)]" : "text-muted-foreground"
+                    }`}
                   >
-                    <span className="text-[color:var(--signal)]/70">{active ? "▸" : "·"}</span>
                     {l.label}
                   </Link>
                 );

@@ -2,20 +2,16 @@
 
 import { useRef } from "react";
 import { useMarqueeMotion } from "./marquee-motion";
-import { TOOL_MARKS, TOOL_BAND } from "@/lib/tool-marks";
+import { TOOL_LOGOS } from "@/lib/tool-marks";
 
 /**
  * The toolchain strip: a light band cut into the dark page.
  *
- * The inversion is the point. Everything else on this site sits on #121212, so
- * a single paper-coloured band reads as a different surface entirely — the one
- * place the page opens up — and it lets the brand marks render the way their
- * owners intend, as dark artwork on light, instead of being knocked out white.
- *
- * Content comes from TOOL_MARKS itself, so the band can only ever contain
- * tools that publish an official mark. Everything in the stack without one —
- * sqlmap, ffuf, Nmap, Ghidra, VSCode — is absent by construction rather than
- * by a filter someone has to remember to keep in sync.
+ * The inversion is the point. Everything else on this site sits on the dark
+ * ground, so a single paper-coloured band reads as a different surface
+ * entirely — the one place the page opens up — and the official logos render
+ * as dark artwork on light, in one charcoal ink. See lib/tool-marks for where
+ * each logo comes from.
  *
  * Travel is slower than the display band below it, so the two never look like
  * the same object moving at two speeds.
@@ -23,7 +19,6 @@ import { TOOL_MARKS, TOOL_BAND } from "@/lib/tool-marks";
 export function ToolMarquee({ note }: { note: string }) {
   const wrapRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const tools = TOOL_BAND;
 
   // scrollFactor 0: this band is deliberately deaf to the scroll. It keeps one
   // unvarying pace while the display bands react, so the page has a constant
@@ -39,23 +34,29 @@ export function ToolMarquee({ note }: { note: string }) {
         <div ref={trackRef} className="tool-band-track">
           {/* Two identical passes: the wrap distance is half the track. */}
           {[0, 1].map((pass) =>
-            tools.map((tool) => (
+            TOOL_LOGOS.map((tool) => (
               <span
-                key={`${pass}-${tool}`}
+                key={`${pass}-${tool.name}`}
                 className="tool-item"
+                style={{ "--logo-scale": tool.scale } as React.CSSProperties}
                 aria-hidden={pass === 1 ? "true" : undefined}
               >
-                {/* Unconditional: TOOL_BAND is the key set of TOOL_MARKS, so
-                    a mark is guaranteed for every entry. */}
-                <svg
-                  className="tool-mark"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  aria-hidden
-                >
-                  <path d={TOOL_MARKS[tool]} />
-                </svg>
-                <span className="tool-name">{tool}</span>
+                {/* Plain <img>: these are static SVGs, which next/image would
+                    pass through unoptimised anyway. The name is the alt text
+                    unless it is also set as a word beside the mark. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={tool.src}
+                  alt={tool.word ? "" : tool.name}
+                  width={tool.w}
+                  height={tool.h}
+                  className="tool-logo"
+                  decoding="async"
+                  draggable={false}
+                />
+                {tool.word && (
+                  <span className={`tool-word ${tool.word.className}`}>{tool.word.text}</span>
+                )}
                 {/* Every item carries a trailing separator, including the last.
                     Skipping it there would leave the join between the two
                     passes narrower than every other gap — a visible hitch

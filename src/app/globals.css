@@ -71,15 +71,18 @@
 :root {
   --radius: 0.5rem;
 
-  /* Pure dark canvas */
-  --background: #121212;
+  /* Warm charcoal ground. Lifted from #121212, which read as flat black, and
+     warmed a touch toward the toolchain band's paper (#ebe9e6) so the two
+     surfaces look like one material at two values. The whole ramp moved with
+     it — raising only the ground would leave panels darker than the page. */
+  --background: #1d1c1a;
   --foreground: oklch(0.95 0.005 180);
-  --surface: #191919;
-  --surface-2: #1f1f1f;
+  --surface: #252422;
+  --surface-2: #2b2a28;
 
-  --card: #171717;
+  --card: #22211f;
   --card-foreground: oklch(0.95 0.005 180);
-  --popover: #191919;
+  --popover: #252422;
   --popover-foreground: oklch(0.95 0.005 180);
 
   /* Electric green accent — used sparingly */
@@ -89,17 +92,16 @@
 
   --primary: var(--signal);
   --primary-foreground: #000000;
-  --secondary: #232323;
+  --secondary: #2e2d2b;
   --secondary-foreground: oklch(0.95 0.005 180);
-  --muted: #1c1c1c;
-  /* 0.68 lightness → ~6.8:1 on the canvas (comfortably above WCAG AA 4.5:1,
-     where 0.62 sat at a tighter 5.45:1). */
+  --muted: #262523;
+  /* 0.68 lightness → 5.94:1 on the ground, 5.00:1 on --surface-2. */
   --muted-foreground: oklch(0.68 0.01 180);
   --accent: var(--signal);
   --accent-foreground: #000000;
-  /* 0.66, not 0.62: raising the ground to #121212 dropped the old value to
-     4.33:1 on --surface, under AA. This restores 5.09:1. */
-  --destructive: oklch(0.66 0.22 25);
+  /* 0.72: the lighter ground dropped 0.66 to 4.49:1 on --surface, under AA.
+     This measures 5.59 / 5.09 / 4.70:1 on ground / surface / surface-2. */
+  --destructive: oklch(0.72 0.22 25);
   --destructive-foreground: oklch(0.98 0 0);
 
   --border: oklch(1 0 0 / 0.08);
@@ -170,9 +172,9 @@
 
   /* Subtle scrollbar */
   ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-track { background: #121212; }
-  ::-webkit-scrollbar-thumb { background: #272727; border-radius: 8px; }
-  ::-webkit-scrollbar-thumb:hover { background: #333333; }
+  ::-webkit-scrollbar-track { background: var(--background); }
+  ::-webkit-scrollbar-thumb { background: #353431; border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: #42403d; }
 }
 
 /* ---------- Utilities ---------- */
@@ -222,7 +224,7 @@
   font-size: 0.6875rem;
   letter-spacing: .02em;
   color: oklch(0.78 0.01 180);
-  background: #171717;
+  background: var(--card);
 }
 
 @utility caret {
@@ -532,22 +534,29 @@
   flex: none;
 }
 
-/* Sized against the reference's roundels — about 56px at desktop, so the mark
-   carries the lockup and the name reads as its wordmark rather than the other
-   way round. */
-.tool-mark {
-  width: clamp(2.1rem, 3.6vw, 3.5rem);
-  height: clamp(2.1rem, 3.6vw, 3.5rem);
+/* Every logo shares one base height and scales off it by its own optical
+   factor (--logo-scale, from lib/tool-marks), since a 4:1 wordmark and a
+   square mark at the same pixel height do not look the same size. */
+.tool-band { --logo-h: clamp(2.35rem, 4vw, 3.75rem); }
+.tool-logo {
+  display: block;
   flex: none;
+  width: auto;
+  height: calc(var(--logo-h) * var(--logo-scale, 1));
+  user-select: none;
 }
 
-.tool-name {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: clamp(1.2rem, 2.2vw, 2rem);
-  letter-spacing: -0.02em;
+/* Names for the two tools with no vector wordmark, set in Montserrat as a
+   close match to their own lettering, in the same charcoal as the logos. */
+.tool-word {
+  font-family: var(--font-wordmark), var(--font-display);
+  font-size: calc(var(--logo-h) * 0.6);
+  line-height: 1;
+  color: #2d2c2a;
   white-space: nowrap;
 }
+.tool-word--burp { font-weight: 700; letter-spacing: -0.01em; }
+.tool-word--osquery { font-weight: 600; letter-spacing: -0.02em; }
 
 /* Separator between entries, matching the reference's dot rhythm. Margin, not
    gap, so the space belongs to the divider rather than the logo beside it. */
@@ -813,7 +822,7 @@
   position: relative;
   overflow: hidden;
   border-radius: 0.4rem;
-  background: color-mix(in oklab, var(--signal) 62%, #121212);
+  background: color-mix(in oklab, var(--signal) 62%, var(--background));
 }
 .about-visual img {
   display: block;
@@ -1005,7 +1014,7 @@
   padding: 0.12rem 0.4rem;
   border: 1px solid var(--border);
   border-radius: 0.3rem;
-  background: #171717;
+  background: var(--card);
   color: oklch(0.85 0.01 180);
 }
 
@@ -1304,3 +1313,258 @@ body { padding-bottom: 2.25rem; }
 }
 .row-link:hover .row-cta,
 .row-link:focus-visible .row-cta { gap: 0.75rem; }
+
+/* ---------- Current role ----------
+   The Work band's card. Same plate as the record rows — surface ground, 1.25rem
+   radius — but split in two and edged in the accent, because it is the one
+   entry on the page that is happening now rather than done. It is not a link,
+   so it takes none of the row wipe: nothing here promises a click. */
+.now-card {
+  display: grid;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  border: 1px solid color-mix(in oklab, var(--signal) 32%, transparent);
+  background: var(--surface);
+}
+@media (min-width: 1024px) {
+  .now-card { grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); }
+}
+
+.now-body {
+  display: flex;
+  flex-direction: column;
+  padding: clamp(1.75rem, 4vw, 4rem) clamp(1.25rem, 4vw, 4rem);
+}
+
+/* The italic line over the name, as the reference sets "Enterprise Platform ·
+   2025". Light italic against the 900 below it — the hero's two-register
+   contrast, at card scale. */
+.now-sector {
+  font-size: clamp(1.1rem, 1.9vw, 1.65rem);
+  font-style: italic;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  color: color-mix(in oklab, var(--foreground) 82%, transparent);
+}
+
+.now-org {
+  margin-top: 0.9rem;
+  font-size: clamp(4.25rem, 11vw, 9.5rem);
+  line-height: 0.82;
+  letter-spacing: -0.045em;
+  color: var(--signal);
+}
+
+.now-role {
+  margin-top: clamp(1.75rem, 3vw, 2.5rem);
+  font-size: var(--text-lead);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--foreground);
+}
+.now-desc {
+  max-width: 46ch;
+  margin-top: 0.85rem;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--muted-foreground);
+}
+
+/* Scope, set where the reference sets its figures. These are the areas of the
+   work, not metrics — there are no numbers to report, so none are invented. */
+.now-scope {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+  margin-top: auto;
+  padding-top: clamp(2.5rem, 5vw, 4rem);
+}
+.now-scope > div {
+  border-top: 1px solid var(--border);
+  padding-top: 1.1rem;
+}
+.now-scope-code {
+  font-size: clamp(1.65rem, 3.4vw, 2.9rem);
+  letter-spacing: -0.035em;
+  color: var(--signal);
+}
+/* Three columns leave a phone about 100px each, and a tracked-out label like
+   VULNERABILITY does not fit in that. Below 640px the areas become rows:
+   code on the left, label against the right edge. */
+@media (max-width: 639px) {
+  .now-scope { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .now-scope > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 0.9rem;
+  }
+  .now-scope > div:last-child { border-bottom: 1px solid var(--border); }
+  .now-scope dd { margin-top: 0; text-align: right; }
+}
+
+/* Right pane: an inset instrument panel, as the reference insets its visual. */
+.now-visual {
+  padding: 0 0.75rem 0.75rem;
+}
+@media (min-width: 1024px) {
+  .now-visual { padding: 0.75rem 0.75rem 0.75rem 0; }
+}
+
+/* The sky panel. An accent fill that deepens toward the bottom, as the
+   reference's client panel does, with the aircraft and lockup in the page's own
+   ink — the same inversion the toolchain band makes, so it reads as part of this
+   site rather than a pasted-in brand colour. Follows the accent theme. */
+.sky {
+  --sky-ink: var(--background);
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 100%;
+  min-height: 22rem;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 0.8rem;
+  color: var(--sky-ink);
+  background:
+    radial-gradient(color-mix(in oklab, var(--sky-ink) 9%, transparent) 1px, transparent 1.3px) 0 0 / 9px 9px,
+    linear-gradient(
+      to bottom,
+      var(--signal) 0%,
+      var(--signal) 45%,
+      color-mix(in oklab, var(--signal) 62%, #0b2a20) 100%
+    );
+}
+
+/* Oversized and turned 45°: lanes inside only ever travel "up", which lands as
+   north-east across the panel at any aspect ratio. -60% keeps the turned layer
+   covering the panel's corners up to a 1.7:1 panel. */
+.sky-layer {
+  position: absolute;
+  inset: -60%;
+  z-index: 0;
+  rotate: 45deg;
+  pointer-events: none;
+}
+
+/* One lane per aircraft: the full height of the layer, travelling its own
+   height from the bottom edge to the top. The resting transform is the same
+   frame the animation starts on (--p), so reduced motion parks every plane
+   exactly where it would have been. */
+.sky-lane {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  transform: translateY(calc((1 - var(--p)) * 100%));
+  animation-name: sky-cross;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-play-state: paused;
+}
+@keyframes sky-cross {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0%); }
+}
+.sky[data-running] .sky-lane { animation-play-state: running; }
+
+.sky-craft { position: relative; display: block; }
+.sky-plane {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+}
+/* Two contrails, one off each engine, fading out behind the tail. */
+.sky-craft::before,
+.sky-craft::after {
+  content: "";
+  position: absolute;
+  top: 58%;
+  width: max(1px, 3%);
+  height: 520%;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--sky-ink) 28%, transparent),
+    transparent
+  );
+}
+.sky-craft::before { left: 30%; }
+.sky-craft::after { right: 30%; }
+
+/* Depth: far planes small and faint, the near one large and out of focus. */
+.sky-lane--far { opacity: 0.4; }
+.sky-lane--mid { opacity: 0.85; }
+.sky-lane--near { opacity: 0.22; filter: blur(3px); }
+
+/* AASL's logo, in the tool band's charcoal. The only source is 200px wide,
+   so it is capped near that (13rem = 208px): any larger and the upscale
+   shows as blur. A vector source would let this grow again. */
+.sky-logo {
+  position: relative;
+  z-index: 1;
+  width: clamp(9.5rem, 36%, 13rem);
+  height: auto;
+  user-select: none;
+}
+
+.sky-caption {
+  position: absolute;
+  left: 1.1rem;
+  bottom: 1rem;
+  z-index: 1;
+  color: color-mix(in oklab, var(--sky-ink) 80%, transparent);
+}
+.sky-toggle { right: 0.85rem; bottom: 0.85rem; z-index: 1; }
+.sky:hover .sky-toggle { opacity: 1; }
+
+/* The global reduced-motion rule would run each crossing once in an instant
+   and drop the planes back to their start. Removing the animation instead
+   leaves them on their resting frame. */
+@media (prefers-reduced-motion: reduce) {
+  .sky-lane { animation: none; }
+}
+
+/* ---------- Nav ----------
+   The mark: J solid, G outlined — the hero's solid/outline pairing at badge
+   size. Set in the display weight so it reads as a mark, not as a label. */
+.brand-mark {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.6rem;
+  line-height: 1;
+  letter-spacing: -0.06em;
+  color: var(--signal);
+}
+
+/* The CV, always one tap away — the site's one conversion, parked where the
+   reference parks its contact button. */
+.nav-cv {
+  display: inline-flex;
+  flex: none;
+  white-space: nowrap;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.25rem;
+  padding: 0 0.85rem;
+  border-radius: 0.4rem;
+  background: var(--signal);
+  color: #000;
+  transition: box-shadow 0.3s;
+}
+.nav-cv:hover { box-shadow: 0 0 28px -6px var(--signal); }
+
+/* ---------- Scramble ----------
+   One slot per character, sized by the final glyph alone (hidden, but in
+   flow). The shuffling glyph is taken out of flow and centred over it, so a
+   wide W passing through never widens the slot and the word holds still. */
+.scramble { display: inline-flex; }
+.scramble-cell { position: relative; display: inline-block; }
+.scramble-final { visibility: hidden; }
+.scramble-cell > :last-child {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  translate: -50% 0;
+}

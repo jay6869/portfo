@@ -5,8 +5,8 @@
  * theme is one custom property write — every border, glow, label, rule, marquee
  * outline and the hero dither shader follow from it.
  *
- * Every entry is verified against the #121212 ground and as a black-on-accent
- * button fill; the lowest of the five is lavender at 10.17:1 and 11.40:1, both
+ * Every entry is verified against the #1d1c1a ground and as a black-on-accent
+ * button fill; the lowest of the five is lavender at 9.24:1 and 11.40:1, both
  * comfortably past WCAG AA. Do not add a colour here without measuring it.
  */
 export type Theme = { hex: string; name: string };

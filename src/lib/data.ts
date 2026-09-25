@@ -14,6 +14,34 @@ export const skillGroups: SkillGroup[] = [
   { domain: "Environments", items: ["Kali", "Docker", "Linux", "VSCode", "tmux"] },
 ];
 
+export interface Role {
+  /** The short form, set at display scale on the card. */
+  org: string;
+  /** Spelled out beneath it — recruiters outside Sri Lanka won't know the acronym. */
+  orgFull: string;
+  title: string;
+  /** "YYYY-MM". Month precision only — the record does not hold a day. */
+  start: string;
+  /** Omit while the role is ongoing. */
+  end?: string;
+  summary: string;
+  areas: { code: string; label: string }[];
+}
+
+export const currentRole: Role = {
+  org: "AASL",
+  orgFull: "Airport & Aviation Services (Sri Lanka)",
+  title: "Cybersecurity Intern",
+  start: "2026-09",
+  summary:
+    "I'm interning on the security side at the company that runs Sri Lanka's airports. Most of my time goes into monitoring, vulnerability assessments and network work.",
+  areas: [
+    { code: "SOC", label: "Security monitoring" },
+    { code: "VULN", label: "Vulnerability assessment" },
+    { code: "NET", label: "Network & infrastructure" },
+  ],
+};
+
 export interface Cert {
   name: string;
   provider: string;

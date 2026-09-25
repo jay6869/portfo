@@ -26,8 +26,10 @@ import { AboutMedia } from "@/components/about-media";
 import { CertSeal } from "@/components/cert-seal";
 import { TextPressure } from "@/components/ui/text-pressure";
 import { CvDownload } from "@/components/cv-download";
+import { FlightPanel } from "@/components/flight-panel";
+import { ScrambleText } from "@/components/scramble-text";
 import { CV_HREF, CV_DOWNLOAD_NAME, CV_SIZE } from "@/lib/cv";
-import { skillGroups, certs } from "@/lib/data";
+import { skillGroups, certs, currentRole } from "@/lib/data";
 import { getAllProjects, getAllWriteups } from "@/lib/posts";
 
 /**
@@ -77,6 +79,15 @@ function credentialId(url?: string) {
   }
 }
 
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** "2026-09" → "Sep 2026". Fixed English names rather than Intl, so the
+ *  server and every visitor's browser render the same string. */
+function formatMonth(ym: string) {
+  const [y, m] = ym.split("-").map(Number);
+  return `${MONTHS[m - 1]} ${y}`;
+}
+
 /** One icon per skill group, in the order they are declared in lib/data.
  *  Kept positional rather than keyed by name so adding a group cannot leave a
  *  row with no icon — it wraps instead. */
@@ -124,10 +135,10 @@ function LabelRule({
 export const metadata: Metadata = {
   title: { absolute: "Janith Godage — Offensive Security & Tooling" },
   description:
-    "Cybersecurity undergraduate building offensive security tooling — breaking things ethically, then engineering the defenses.",
+    "Janith Godage — cybersecurity student at SLIIT and intern at AASL. Security tools, lab writeups and cheat sheets.",
   openGraph: {
     title: "Janith Godage — Offensive Security & Tooling",
-    description: "Penetration testing, detection engineering, and security research.",
+    description: "Cybersecurity student at SLIIT and intern at AASL. Tools, writeups and cheat sheets.",
     url: "/",
   },
   alternates: { canonical: "/" },
@@ -140,6 +151,9 @@ export default function Home() {
   // Not every credential has a public verification URL, so the count states
   // both figures rather than claiming the whole set is checkable.
   const verifiable = earned.filter((c) => c.credentialUrl).length;
+  const roleSpan = `${formatMonth(currentRole.start)} – ${
+    currentRole.end ? formatMonth(currentRole.end) : "present"
+  }`;
 
   return (
     <ScrollChoreography>
@@ -147,14 +161,14 @@ export default function Home() {
       <section
         data-hero
         data-hud="00 — INDEX"
-        className="relative flex min-h-[100svh] flex-col justify-center overflow-hidden"
+        className="relative flex min-h-[calc(100svh-3.5rem)] flex-col justify-center overflow-hidden"
       >
         <HeroDither />
         <div className="hero-veil pointer-events-none absolute inset-0 z-10" aria-hidden />
 
         <div
           data-hero-parallax
-          className="relative z-20 mx-auto flex min-h-[100svh] w-full max-w-[1600px] flex-col justify-between px-5 pb-16 pt-28 sm:px-8 sm:pb-20"
+          className="relative z-20 mx-auto flex min-h-[calc(100svh-3.5rem)] w-full max-w-[1600px] flex-col justify-between px-5 pb-20 pt-20 sm:px-8 sm:pb-24"
         >
           {/* Top — the role. */}
           <div data-hero-fade>
@@ -186,8 +200,8 @@ export default function Home() {
               className="mt-10 flex flex-wrap gap-x-9 gap-y-3"
             >
               {[
-                "Web & network exploitation",
-                "Detection engineering",
+                `Intern at ${currentRole.org}`,
+                "3rd year at SLIIT",
                 "Sri Lanka · GMT+5:30",
               ].map((f) => (
                 <li key={f} className="label flex items-center gap-2.5">
@@ -213,12 +227,61 @@ export default function Home() {
       </section>
 
       {/* ═══ TOOLCHAIN ═══ */}
-      <ToolMarquee note="Some of the tools I work in" />
+      <ToolMarquee note="What I use most days" />
 
-      {/* ═══ WORK ═══ */}
+      {/* ═══ WORK ═══
+          Where Janith is now, directly under the name, because it is the first
+          thing a recruiter wants settled. Not a link: there is no case study
+          behind it, and the card should not promise one. */}
       <section className="band" data-hud="01 — WORK">
-        {/* Meta row stays on the container grid; the band below breaks it. */}
         <SectionMeta index="01">
+          <span className="label shrink-0">Currently</span>
+        </SectionMeta>
+
+        <MarqueeBand text="Work" className="mb-14" />
+
+        <div className="mx-auto max-w-[1600px] px-5 sm:px-8">
+          <article data-reveal className="now-card">
+            <div className="now-body">
+              <p className="now-sector">Internship · {roleSpan}</p>
+
+              <h3 className="now-org display">
+                <ScrambleText text={currentRole.org} />
+              </h3>
+              <p className="label mt-4 text-muted-foreground">{currentRole.orgFull}</p>
+
+              <p className="now-role">{currentRole.title}</p>
+              <p className="now-desc text-pretty">{currentRole.summary}</p>
+
+              <dl className="now-scope">
+                {currentRole.areas.map((a) => (
+                  <div key={a.code}>
+                    <dt className="now-scope-code display">{a.code}</dt>
+                    <dd className="label mt-2.5 text-muted-foreground">{a.label}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+
+            <div className="now-visual">
+              <FlightPanel
+                logo={{
+                  src: "/logos/aasl.png",
+                  alt: `${currentRole.orgFull} logo`,
+                  w: 796,
+                  h: 392,
+                }}
+                caption="Sri Lanka"
+              />
+            </div>
+          </article>
+        </div>
+      </section>
+
+      {/* ═══ PROJECTS ═══ */}
+      <section className="band" data-hud="02 — PROJECTS">
+        {/* Meta row stays on the container grid; the band below breaks it. */}
+        <SectionMeta index="02">
           <Link
             href="/projects"
             className="label group inline-flex shrink-0 items-center gap-2 transition-colors hover:text-[color:var(--signal)]"
@@ -230,7 +293,7 @@ export default function Home() {
 
         {/* The only band that travels under its own power. The other four are
             scroll-driven, so this one reads as the page's moving part. */}
-        <MarqueeBand text="Selected work" motion="drift" className="mb-14" />
+        <MarqueeBand text="Selected projects" motion="drift" className="mb-14" />
 
         <div data-reveal-group className="row-stack mx-auto max-w-[1600px] px-5 sm:px-8">
           {projects.map((p, i) => (
@@ -274,8 +337,8 @@ export default function Home() {
       </section>
 
       {/* ═══ WRITING ═══ */}
-      <section className="band" data-hud="02 — WRITEUPS">
-        <SectionMeta index="02">
+      <section className="band" data-hud="03 — WRITEUPS">
+        <SectionMeta index="03">
           <Link
             href="/writeups"
             className="label group inline-flex shrink-0 items-center gap-2 transition-colors hover:text-[color:var(--signal)]"
@@ -327,8 +390,8 @@ export default function Home() {
       </section>
 
       {/* ═══ CREDENTIALS ═══ */}
-      <section className="band border-t border-border" data-hud="03 — VERIFIED">
-        <SectionMeta index="03">
+      <section className="band border-t border-border" data-hud="04 — VERIFIED">
+        <SectionMeta index="04">
           <span className="label shrink-0">
             {earned.length} earned · {verifiable} verifiable
           </span>
@@ -422,15 +485,15 @@ export default function Home() {
           })}
 
           <p data-reveal-item className="mt-10 max-w-xl text-sm text-muted-foreground">
-            Public repositories are the rest of the evidence — every project above
-            links to its source.
+            The rest is on GitHub. Every project above links to its repo, so
+            you can read the code yourself.
           </p>
         </div>
       </section>
 
       {/* ═══ ABOUT ═══ */}
-      <section className="band border-t border-border" data-hud="04 — ABOUT">
-        <SectionMeta index="04">
+      <section className="band border-t border-border" data-hud="05 — ABOUT">
+        <SectionMeta index="05">
           <span className="label shrink-0">Background</span>
         </SectionMeta>
 
@@ -455,14 +518,14 @@ export default function Home() {
                 ))}
 
               <p className="about-lede text-pretty">
-                I got into security by breaking something I shouldn&apos;t have. I
-                stayed because writing the rule that catches your own exploit is
-                the best feedback loop in this field.
+                I got into security by breaking something I probably
+                shouldn&apos;t have. I stuck around because working out how
+                you&apos;d catch it turned out to be just as fun.
               </p>
 
               <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
-                Red, blue, or purple — I care more about the people and the work
-                than the colour of the team.
+                Red team or blue team, I&apos;m not fussy. I care more about who
+                I&apos;m working with and what we&apos;re working on.
               </p>
 
               {/* Icons rather than emoji: the site runs lucide at one stroke
@@ -486,8 +549,8 @@ export default function Home() {
               </dl>
             </div>
 
-            {/* Right — the record. Study and focus only: there is no employment
-                history to show, and inventing one is not on the table. */}
+            {/* Right — the record. Study and focus; the current role has its
+                own band directly under the hero. */}
             <div data-reveal-group>
               <LabelRule className="mb-1">Study</LabelRule>
               <div className="about-group">
@@ -509,27 +572,27 @@ export default function Home() {
                 {[
                   {
                     name: "Offensive",
-                    role: "Web exploitation, network attack paths, and the tooling that automates the boring half of both",
+                    role: "Web and network attacks, plus scripts that handle the boring parts",
                     tag: "[red]",
                   },
                   {
                     name: "Detection",
-                    role: "Sigma rules, Suricata signatures, and Wazuh pipelines — written against attacks I ran myself",
+                    role: "Monitoring and alert triage at AASL, and learning to spot my own lab attacks in the logs",
                     tag: "[blue]",
                   },
                   {
                     name: "Tooling",
-                    role: "Python and TypeScript utilities that take the repetitive part of an engagement off the table",
+                    role: "Small Python and TypeScript tools for the repetitive bits of recon and testing",
                     tag: "[build]",
                   },
                   {
                     name: "Labs",
-                    role: "PortSwigger Academy, HackTheBox, and CTF play — the reps behind everything above",
+                    role: "PortSwigger Academy, HackTheBox and CTFs, mostly on weekends",
                     tag: "[ongoing]",
                   },
                   {
                     name: "Research",
-                    role: "Wi-Fi beamforming feedback and the embedded side. Early days; the writeups are where it shows",
+                    role: "Wi-Fi beamforming and embedded stuff. Still early, the writeups have what I've got so far",
                     tag: "[open]",
                   },
                 ].map((f) => (
@@ -574,22 +637,22 @@ export default function Home() {
               {
                 k: "01",
                 t: "Recon & exploit",
-                d: "Web exploitation, network attack paths, and tooling that automates the boring parts of both. Burp, sqlmap, ffuf, Nmap, Metasploit.",
+                d: "Finding what's exposed and seeing how far it goes. Mostly Burp, sqlmap, ffuf, Nmap and Metasploit.",
               },
               {
                 k: "02",
                 t: "Detection",
-                d: "Sigma rules, Suricata signatures, and Wazuh pipelines — written against attacks I ran myself, so I know exactly what they have to catch.",
+                d: "Watching logs and triaging alerts at AASL. Running the attack myself first makes it a lot easier to know what I'm looking for.",
               },
               {
                 k: "03",
                 t: "The loop",
-                d: "Writing a rule that catches your own exploit is a uniquely satisfying loop. Each side sharpens the other, which is why I want to work purple.",
+                d: "Attacking things makes me better at defending them, and the other way round. That's why I haven't picked a side yet.",
               },
               {
                 k: "04",
                 t: "Written down",
-                d: `Every lab and finding gets a walkthrough — ${writeups.length} of them so far, plus reference sheets, written for the next person who has to read them.`,
+                d: `If I learn something in a lab, I write it up. ${writeups.length} writeups so far, plus a few cheat sheets I keep going back to.`,
               },
             ].map((c) => (
               <div
@@ -640,9 +703,9 @@ export default function Home() {
       </section>
 
       {/* ═══ CONTACT ═══ */}
-      <section id="contact" data-hud="05 — CONTACT" className="band scroll-mt-20 border-t border-border">
-        <SectionMeta index="05">
-          <span className="label shrink-0">Reply within 48h</span>
+      <section id="contact" data-hud="06 — CONTACT" className="band scroll-mt-20 border-t border-border">
+        <SectionMeta index="06">
+          <span className="label shrink-0">Say hi</span>
         </SectionMeta>
 
         <MarqueeBand text="Let’s talk" className="mb-14" />
@@ -682,15 +745,15 @@ export default function Home() {
           </div>
 
           <p data-reveal className="contact-ask mt-10">
-            Open to penetration testing, security analysis, and SOC work.
+            Happy to talk security, internships, projects, or a CTF team.
           </p>
 
           <p
             data-reveal
             className="mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground"
           >
-            Engagements, research collaboration, or a CTF team — drop a line. I
-            read everything and reply within 48 hours. PGP on request.
+            Email is the quickest way to reach me. I usually reply within a day
+            or two.
           </p>
 
           <div data-reveal className="mt-10">

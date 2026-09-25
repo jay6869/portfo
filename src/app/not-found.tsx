@@ -1,26 +1,33 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-[70vh] items-center justify-center px-4">
-      <div className="hairline w-full max-w-xl rounded-lg bg-[color:var(--surface)] p-6 sm:p-8">
-        <div className="label text-[color:var(--signal)]/80">
-          status · 404
-        </div>
-        <h1 className="mono mt-3 text-2xl text-foreground sm:text-3xl">
-          <span className="text-[color:var(--signal)]">$</span> {`{cwd}: command not found`}
-        </h1>
-        <p className="mono mt-3 text-sm text-muted-foreground">
-          bash: the page you were looking for is not on this host.
-        </p>
-        <div className="mt-6 flex flex-wrap gap-2">
-          <Link href="/" className="hairline mono rounded-md px-3 py-2 text-xs hover:border-[color:var(--signal)]/50 hover:text-[color:var(--signal)]">
-            cd ~/home
+    <div className="mx-auto flex min-h-[70vh] max-w-[1600px] flex-col justify-center px-5 py-16 sm:px-8">
+      <p className="label text-[color:var(--signal)]/70">404</p>
+      <h1 className="display display-section mt-4 text-foreground">
+        Nothing
+        <br />
+        <span className="display-outline">here.</span>
+      </h1>
+      <p className="mt-6 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
+        This page doesn&apos;t exist, or it moved. The links below go somewhere real.
+      </p>
+      <div className="mt-8 flex flex-wrap gap-x-8 gap-y-3">
+        {[
+          { href: "/", label: "Home" },
+          { href: "/projects", label: "Projects" },
+          { href: "/writeups", label: "Writeups" },
+        ].map((l) => (
+          <Link
+            key={l.href}
+            href={l.href}
+            className="label group inline-flex items-center gap-2 transition-colors hover:text-[color:var(--signal)]"
+          >
+            {l.label}
+            <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
           </Link>
-          <Link href="/projects" className="hairline mono rounded-md px-3 py-2 text-xs hover:border-[color:var(--signal)]/50 hover:text-[color:var(--signal)]">
-            ls projects/
-          </Link>
-        </div>
+        ))}
       </div>
     </div>
   );

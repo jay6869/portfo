@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Rubik } from "next/font/google";
+import { Montserrat, Rubik } from "next/font/google";
 import "./globals.css";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
@@ -24,6 +24,16 @@ const rubik = Rubik({
   style: ["normal", "italic"],
   variable: "--font-rubik",
   display: "swap",
+});
+
+// Wordmark stand-in for the two toolchain logos that ship no vector lettering
+// (Burp Suite, osquery). Not preloaded: it is only ever needed below the hero.
+const wordmark = Montserrat({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  variable: "--font-wordmark",
+  display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -57,7 +67,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#121212",
+  themeColor: "#1d1c1a",
   width: "device-width",
   initialScale: 1,
 };
@@ -76,33 +86,9 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`dark ${rubik.variable}`}
+      className={`dark ${rubik.variable} ${wordmark.variable}`}
     >
       <body>
-        {/* Direction contract, emitted as a real HTML comment so it survives the
-            production build and stays greppable in the shipped output. */}
-        <div
-          hidden
-          dangerouslySetInnerHTML={{
-            __html: `<!--
-THESIS: A live attack-surface graph the visitor stands inside, with the name at
-architectural scale on top of it. Refuses the dev-portfolio card grid and the
-austere all-one-size terminal dump alike.
-OWN-WORLD: Signal green oklch(0.88 0.22 155) on #121212. One monospace voice at
-two extreme registers: JetBrains Mono 700 at 14.5vw, tracking -0.055em, half
-outlined in stroke; against 10.5px labels tracked 0.24em. Phosphor bloom, hairline
-rules, full-bleed rows that scan-wipe on hover.
-STORY: A recruiter meets the name at scale over a network being mapped, reads
-the loop (break it, then catch it), and takes the CV from the hero itself.
-FIRST VIEWPORT: 100svh Three.js node/edge graph with a scan pulse; availability
-label, JANITH / GODAGE stacked huge (second line outlined), positioning line and
-the curl CV command bottom-right.
-FORM: attack-surface graph + editorial scale, candidate 4 of 7, seed 6c87b2b6.
-FINISH: unreviewed and undocumented is unfinished; this build ends with the
-finish review, the verdict, and DESIGN.md
--->`,
-          }}
-        />
         {/* Framer Motion renders its `initial` state into the SSR markup, so ~40
             elements per page (including the wrapper around ALL page content)
             ship as opacity:0 and are revealed only once the client bundle
